@@ -42,7 +42,7 @@
             // 
             // button1
             // 
-            button1.Location = new Point(56, 216);
+            button1.Location = new Point(148, 400);
             button1.Name = "button1";
             button1.Size = new Size(75, 23);
             button1.TabIndex = 1;
@@ -57,6 +57,7 @@
             ClientSize = new Size(1054, 691);
             Controls.Add(button1);
             Controls.Add(terminalMatrixControl1);
+            DoubleBuffered = true;
             Name = "Form1";
             Text = "Form1";
             Load += Form1_Load;

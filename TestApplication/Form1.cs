@@ -21,7 +21,9 @@ public partial class Form1 : Form
         terminalMatrixControl1.VerticalLine(40, ColorName.Green);
         terminalMatrixControl1.VerticalLine(41, 10, 190, ColorName.White);
         terminalMatrixControl1.Box(ColorName.LightBlue, 43, 43, 63, 63);
-        terminalMatrixControl1.PrintAt(ColorName.LightGreen, 0, 0, "ABAB BA");
+        terminalMatrixControl1.PrintAt(ColorName.LightGreen, 20, 10, "ABAB BA");
+        terminalMatrixControl1.CursorX = 20;
+        terminalMatrixControl1.CursorY = 10;
         terminalMatrixControl1.UpdateBitmap();
     }
 }

@@ -18,6 +18,8 @@ public partial class TerminalMatrixControl : UserControl
     public const int CharactersWidth = 80;
     public const int CharactersHeight = 25;
     public Bitmap? Bitmap { get; private set; }
+    public int CursorX { get; set; }
+    public int CursorY { get; set; }
 
     public TerminalMatrixControl()
     {
@@ -130,52 +132,70 @@ public partial class TerminalMatrixControl : UserControl
         var bitsHandle = GCHandle.Alloc(_bitmap, GCHandleType.Pinned);
         Bitmap = new Bitmap(PixelsWidth, PixelsHeight, PixelsWidth * 4, PixelFormat.Format32bppArgb, bitsHandle.AddrOfPinnedObject());
 
-        unsafe
+        var data = Bitmap.LockBits(new Rectangle(0, 0, PixelsWidth, PixelsHeight), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+
+        for (var y = 0; y < PixelsHeight; y++)
         {
-            var data = Bitmap.LockBits(new Rectangle(0, 0, PixelsWidth, PixelsHeight), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-
-            for (var y = 0; y < PixelsHeight; y++)
+            for (var x = 0; x < PixelsWidth; x++)
             {
-                for (var x = 0; x < PixelsWidth; x++)
-                {
-                    var index = x + y * PixelsWidth;
-                    _bitmap[index] = _palette.GetColor(_pixelMap[x, y]).ToArgb();
-                }
+                var index = x + y * PixelsWidth;
+                _bitmap[index] = _palette.GetColor(_pixelMap[x, y]).ToArgb();
             }
+        }
 
-            for (var y = 0; y < CharactersHeight; y++)
+        for (var y = 0; y < CharactersHeight; y++)
+        {
+            for (var x = 0; x < CharactersWidth; x++)
             {
-                for (var x = 0; x < CharactersWidth; x++)
+                if (x == CursorX && y == CursorY)
                 {
-                    if (_characterMap[x, y] > 0)
+                    var characterFont = _font[_characterMap[x, y]];
+                    var c = _palette.GetColor(ColorName.Green).ToArgb();
+                    var pixelXStart = x * 8;
+                    var pixelYStart = y * 8;
+                    var sourceX = 0;
+                    var sourceY = 0;
+                    for (var pixelY = pixelYStart; pixelY < pixelYStart + 8; pixelY++)
                     {
-                        var characterFont = _font[_characterMap[x, y]];
-                        var c = _palette.GetColor(_characterColorMap[x, y]).ToArgb();
-                        var pixelXStart = x * 8;
-                        var pixelYStart = y * 8;
-                        var sourceX = 0;
-                        var sourceY = 0;
-                        for (var pixelY = pixelYStart; pixelY < pixelYStart + 8; pixelY++)
+                        for (var pixelX = pixelXStart; pixelX < pixelXStart + 8; pixelX++)
                         {
-                            for (var pixelX = pixelXStart; pixelX < pixelXStart + 8; pixelX++)
-                            {
-                                var index = pixelX + pixelY * PixelsWidth;
-                                if (characterFont.Pixels[sourceX, sourceY])
-                                    _bitmap[index] = c;
-
-                                sourceX++;
-                            }
-
-                            sourceX = 0;
-                            sourceY++;
+                            var index = pixelX + pixelY * PixelsWidth;
+                            _bitmap[index] = characterFont.Pixels[sourceX, sourceY] ? 0 : c;
+                            sourceX++;
                         }
+
+                        sourceX = 0;
+                        sourceY++;
+                    }
+                }
+                else if (_characterMap[x, y] > 0)
+                {
+                    var characterFont = _font[_characterMap[x, y]];
+                    var c = _palette.GetColor(_characterColorMap[x, y]).ToArgb();
+                    var pixelXStart = x * 8;
+                    var pixelYStart = y * 8;
+                    var sourceX = 0;
+                    var sourceY = 0;
+                    for (var pixelY = pixelYStart; pixelY < pixelYStart + 8; pixelY++)
+                    {
+                        for (var pixelX = pixelXStart; pixelX < pixelXStart + 8; pixelX++)
+                        {
+                            var index = pixelX + pixelY * PixelsWidth;
+                            if (characterFont.Pixels[sourceX, sourceY])
+                                _bitmap[index] = c;
+
+                            sourceX++;
+                        }
+
+                        sourceX = 0;
+                        sourceY++;
                     }
                 }
             }
-
-            Bitmap.UnlockBits(data);
-            bitsHandle.Free();
         }
+
+        Bitmap.UnlockBits(data);
+        bitsHandle.Free();
 
         Invalidate();
     }

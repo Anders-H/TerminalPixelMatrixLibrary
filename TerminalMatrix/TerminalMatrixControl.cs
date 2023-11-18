@@ -6,11 +6,14 @@ namespace TerminalMatrix;
 
 public partial class TerminalMatrixControl : UserControl
 {
-    private int[,] _characterColorMap;
-    private int[,] _characterMap;
-    private int[,] _pixelMap;
-    private int[] _bitmap;
-    private readonly TerminalFont _font;
+    private readonly int[,] _characterColorMap;
+    private readonly int[,] _characterMap;
+    private readonly int[,] _pixelMap;
+    private readonly int[] _bitmap;
+    private bool _cursorVisibleBlink;
+    private readonly System.Windows.Forms.Timer _timer = new();
+    // ReSharper disable once CollectionNeverUpdated.Local
+    private readonly TerminalFont _font = new();
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;
     public const int PixelsWidth = 640;
@@ -27,16 +30,26 @@ public partial class TerminalMatrixControl : UserControl
         _characterMap = new int[CharactersWidth, CharactersHeight];
         _pixelMap = new int[PixelsWidth, PixelsHeight];
         _bitmap = new int[PixelsWidth * PixelsHeight];
-        _font = new TerminalFont();
+        _cursorVisibleBlink = false;
         _codePage = new TerminalCodePage();
         _palette = new Palette();
+        _timer.Interval = 1000;
         InitializeComponent();
     }
 
     private void UserControl1_Load(object sender, EventArgs e)
     {
         DoubleBuffered = true;
+        _timer.Tick += Blink;
+        _timer.Enabled = true;
         Clear();
+    }
+
+    private void Blink(object? sender, EventArgs e)
+    {
+        _cursorVisibleBlink = !_cursorVisibleBlink;
+        UpdateBitmap();
+        Invalidate();
     }
 
     public void ClearColorMap()
@@ -147,20 +160,25 @@ public partial class TerminalMatrixControl : UserControl
         {
             for (var x = 0; x < CharactersWidth; x++)
             {
+                var characterFont = _font[_characterMap[x, y]];
+                var c = _palette.GetColor(ColorName.Green).ToArgb();
+                var pixelXStart = x * 8;
+                var pixelYStart = y * 8;
+                var sourceX = 0;
+                var sourceY = 0;
+
                 if (x == CursorX && y == CursorY)
                 {
-                    var characterFont = _font[_characterMap[x, y]];
-                    var c = _palette.GetColor(ColorName.Green).ToArgb();
-                    var pixelXStart = x * 8;
-                    var pixelYStart = y * 8;
-                    var sourceX = 0;
-                    var sourceY = 0;
                     for (var pixelY = pixelYStart; pixelY < pixelYStart + 8; pixelY++)
                     {
                         for (var pixelX = pixelXStart; pixelX < pixelXStart + 8; pixelX++)
                         {
                             var index = pixelX + pixelY * PixelsWidth;
-                            _bitmap[index] = characterFont.Pixels[sourceX, sourceY] ? 0 : c;
+                            if (_cursorVisibleBlink)
+                                _bitmap[index] = characterFont.Pixels[sourceX, sourceY] ? c : 0;
+                            else
+                                _bitmap[index] = characterFont.Pixels[sourceX, sourceY] ? 0 : c;
+
                             sourceX++;
                         }
 
@@ -170,12 +188,6 @@ public partial class TerminalMatrixControl : UserControl
                 }
                 else if (_characterMap[x, y] > 0)
                 {
-                    var characterFont = _font[_characterMap[x, y]];
-                    var c = _palette.GetColor(_characterColorMap[x, y]).ToArgb();
-                    var pixelXStart = x * 8;
-                    var pixelYStart = y * 8;
-                    var sourceX = 0;
-                    var sourceY = 0;
                     for (var pixelY = pixelYStart; pixelY < pixelYStart + 8; pixelY++)
                     {
                         for (var pixelX = pixelXStart; pixelX < pixelXStart + 8; pixelX++)
@@ -217,5 +229,408 @@ public partial class TerminalMatrixControl : UserControl
         e.Graphics.SmoothingMode = SmoothingMode.None;
         e.Graphics.DrawImage(Bitmap, 0, 0, Width, Height);
         base.OnPaint(e);
+    }
+
+    private void ShowKeyboardActivity()
+    {
+        _timer.Enabled = false;
+        _cursorVisibleBlink = false;
+        _timer.Enabled = true;
+        UpdateBitmap();
+        Invalidate();
+    }
+
+    protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
+    {
+        switch (e.KeyCode)
+        {
+            case Keys.Tab:
+            case Keys.Up:
+            case Keys.Right:
+            case Keys.Down:
+            case Keys.Left:
+                e.IsInputKey = true;
+                break;
+        }
+
+        base.OnPreviewKeyDown(e);
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        switch (e.KeyCode)
+        {
+            case Keys.KeyCode:
+                break;
+            case Keys.Modifiers:
+                break;
+            case Keys.None:
+                break;
+            case Keys.LButton:
+                break;
+            case Keys.RButton:
+                break;
+            case Keys.Cancel:
+                break;
+            case Keys.MButton:
+                break;
+            case Keys.XButton1:
+                break;
+            case Keys.XButton2:
+                break;
+            case Keys.Back:
+                break;
+            case Keys.Tab:
+                break;
+            case Keys.LineFeed:
+                break;
+            case Keys.Clear:
+                break;
+            case Keys.Return:
+                break;
+            case Keys.ShiftKey:
+                break;
+            case Keys.ControlKey:
+                break;
+            case Keys.Menu:
+                break;
+            case Keys.Pause:
+                break;
+            case Keys.Capital:
+                break;
+            case Keys.KanaMode:
+                break;
+            case Keys.JunjaMode:
+                break;
+            case Keys.FinalMode:
+                break;
+            case Keys.HanjaMode:
+                break;
+            case Keys.Escape:
+                break;
+            case Keys.IMEConvert:
+                break;
+            case Keys.IMENonconvert:
+                break;
+            case Keys.IMEAccept:
+                break;
+            case Keys.IMEModeChange:
+                break;
+            case Keys.Space:
+                break;
+            case Keys.Prior:
+                break;
+            case Keys.Next:
+                break;
+            case Keys.End:
+                break;
+            case Keys.Home:
+                break;
+            case Keys.Left:
+                break;
+            case Keys.Up:
+                if (CursorY > 0)
+                {
+                    CursorY--;
+                    ShowKeyboardActivity();
+                }
+                break;
+            case Keys.Right:
+                break;
+            case Keys.Down:
+                if (CursorY < CharactersHeight - 1)
+                {
+                    CursorY++;
+                    ShowKeyboardActivity();
+                }
+                else
+                {
+                    // TODO: Scroll!
+                }
+                break;
+            case Keys.Select:
+                break;
+            case Keys.Print:
+                break;
+            case Keys.Execute:
+                break;
+            case Keys.Snapshot:
+                break;
+            case Keys.Insert:
+                break;
+            case Keys.Delete:
+                break;
+            case Keys.Help:
+                break;
+            case Keys.D0:
+                break;
+            case Keys.D1:
+                break;
+            case Keys.D2:
+                break;
+            case Keys.D3:
+                break;
+            case Keys.D4:
+                break;
+            case Keys.D5:
+                break;
+            case Keys.D6:
+                break;
+            case Keys.D7:
+                break;
+            case Keys.D8:
+                break;
+            case Keys.D9:
+                break;
+            case Keys.A:
+                break;
+            case Keys.B:
+                break;
+            case Keys.C:
+                break;
+            case Keys.D:
+                break;
+            case Keys.E:
+                break;
+            case Keys.F:
+                break;
+            case Keys.G:
+                break;
+            case Keys.H:
+                break;
+            case Keys.I:
+                break;
+            case Keys.J:
+                break;
+            case Keys.K:
+                break;
+            case Keys.L:
+                break;
+            case Keys.M:
+                break;
+            case Keys.N:
+                break;
+            case Keys.O:
+                break;
+            case Keys.P:
+                break;
+            case Keys.Q:
+                break;
+            case Keys.R:
+                break;
+            case Keys.S:
+                break;
+            case Keys.T:
+                break;
+            case Keys.U:
+                break;
+            case Keys.V:
+                break;
+            case Keys.W:
+                break;
+            case Keys.X:
+                break;
+            case Keys.Y:
+                break;
+            case Keys.Z:
+                break;
+            case Keys.LWin:
+                break;
+            case Keys.RWin:
+                break;
+            case Keys.Apps:
+                break;
+            case Keys.Sleep:
+                break;
+            case Keys.NumPad0:
+                break;
+            case Keys.NumPad1:
+                break;
+            case Keys.NumPad2:
+                break;
+            case Keys.NumPad3:
+                break;
+            case Keys.NumPad4:
+                break;
+            case Keys.NumPad5:
+                break;
+            case Keys.NumPad6:
+                break;
+            case Keys.NumPad7:
+                break;
+            case Keys.NumPad8:
+                break;
+            case Keys.NumPad9:
+                break;
+            case Keys.Multiply:
+                break;
+            case Keys.Add:
+                break;
+            case Keys.Separator:
+                break;
+            case Keys.Subtract:
+                break;
+            case Keys.Decimal:
+                break;
+            case Keys.Divide:
+                break;
+            case Keys.F1:
+                break;
+            case Keys.F2:
+                break;
+            case Keys.F3:
+                break;
+            case Keys.F4:
+                break;
+            case Keys.F5:
+                break;
+            case Keys.F6:
+                break;
+            case Keys.F7:
+                break;
+            case Keys.F8:
+                break;
+            case Keys.F9:
+                break;
+            case Keys.F10:
+                break;
+            case Keys.F11:
+                break;
+            case Keys.F12:
+                break;
+            case Keys.F13:
+                break;
+            case Keys.F14:
+                break;
+            case Keys.F15:
+                break;
+            case Keys.F16:
+                break;
+            case Keys.F17:
+                break;
+            case Keys.F18:
+                break;
+            case Keys.F19:
+                break;
+            case Keys.F20:
+                break;
+            case Keys.F21:
+                break;
+            case Keys.F22:
+                break;
+            case Keys.F23:
+                break;
+            case Keys.F24:
+                break;
+            case Keys.NumLock:
+                break;
+            case Keys.Scroll:
+                break;
+            case Keys.LShiftKey:
+                break;
+            case Keys.RShiftKey:
+                break;
+            case Keys.LControlKey:
+                break;
+            case Keys.RControlKey:
+                break;
+            case Keys.LMenu:
+                break;
+            case Keys.RMenu:
+                break;
+            case Keys.BrowserBack:
+                break;
+            case Keys.BrowserForward:
+                break;
+            case Keys.BrowserRefresh:
+                break;
+            case Keys.BrowserStop:
+                break;
+            case Keys.BrowserSearch:
+                break;
+            case Keys.BrowserFavorites:
+                break;
+            case Keys.BrowserHome:
+                break;
+            case Keys.VolumeMute:
+                break;
+            case Keys.VolumeDown:
+                break;
+            case Keys.VolumeUp:
+                break;
+            case Keys.MediaNextTrack:
+                break;
+            case Keys.MediaPreviousTrack:
+                break;
+            case Keys.MediaStop:
+                break;
+            case Keys.MediaPlayPause:
+                break;
+            case Keys.LaunchMail:
+                break;
+            case Keys.SelectMedia:
+                break;
+            case Keys.LaunchApplication1:
+                break;
+            case Keys.LaunchApplication2:
+                break;
+            case Keys.OemSemicolon:
+                break;
+            case Keys.Oemplus:
+                break;
+            case Keys.Oemcomma:
+                break;
+            case Keys.OemMinus:
+                break;
+            case Keys.OemPeriod:
+                break;
+            case Keys.OemQuestion:
+                break;
+            case Keys.Oemtilde:
+                break;
+            case Keys.OemOpenBrackets:
+                break;
+            case Keys.OemPipe:
+                break;
+            case Keys.OemCloseBrackets:
+                break;
+            case Keys.OemQuotes:
+                break;
+            case Keys.Oem8:
+                break;
+            case Keys.OemBackslash:
+                break;
+            case Keys.ProcessKey:
+                break;
+            case Keys.Packet:
+                break;
+            case Keys.Attn:
+                break;
+            case Keys.Crsel:
+                break;
+            case Keys.Exsel:
+                break;
+            case Keys.EraseEof:
+                break;
+            case Keys.Play:
+                break;
+            case Keys.Zoom:
+                break;
+            case Keys.NoName:
+                break;
+            case Keys.Pa1:
+                break;
+            case Keys.OemClear:
+                break;
+            case Keys.Shift:
+                break;
+            case Keys.Control:
+                break;
+            case Keys.Alt:
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        base.OnKeyDown(e);
     }
 }

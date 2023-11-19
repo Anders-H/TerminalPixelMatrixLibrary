@@ -37,5 +37,16 @@ public class TerminalFont : List<CharacterPixelMatrix>
             @",*****,," +
             @",,,,,,,,"
         ));
+        // 3: C
+        Add(new CharacterPixelMatrix(
+            @",,****,," +
+            @",**,,**," +
+            @",**,,,,," +
+            @",**,,,,," +
+            @",**,,,,," +
+            @",**,,**," +
+            @",,****,," +
+            @",,,,,,,,"
+        ));
     }
 }

@@ -11,14 +11,16 @@ public class TerminalCodePage
         {
             { 0, ' ' },
             { 1, 'A' },
-            { 2, 'B' }
+            { 2, 'B' },
+            { 3, 'C' }
         };
 
         Asc = new Dictionary<char, int>
         {
             { ' ', 0 },
             { 'A', 1 },
-            { 'B', 2 }
+            { 'B', 2 },
+            { 'C', 3 }
         };
     }
 }

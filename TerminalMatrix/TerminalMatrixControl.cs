@@ -23,6 +23,7 @@ public partial class TerminalMatrixControl : UserControl
     public Bitmap? Bitmap { get; private set; }
     public int CursorX { get; set; }
     public int CursorY { get; set; }
+    public int CurrentCursorColor { get; set; }
 
     public TerminalMatrixControl()
     {
@@ -33,6 +34,7 @@ public partial class TerminalMatrixControl : UserControl
         _cursorVisibleBlink = false;
         _codePage = new TerminalCodePage();
         _palette = new Palette();
+        CurrentCursorColor = (int)ColorName.Green;
         _timer.Interval = 1000;
         InitializeComponent();
     }
@@ -240,6 +242,11 @@ public partial class TerminalMatrixControl : UserControl
         Invalidate();
     }
 
+    private void TypeCharacter(char c)
+    {
+        
+    }
+
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
     {
         switch (e.KeyCode)
@@ -260,51 +267,9 @@ public partial class TerminalMatrixControl : UserControl
     {
         switch (e.KeyCode)
         {
-            case Keys.KeyCode:
+            case Keys.Back: // Backspace
                 break;
-            case Keys.Modifiers:
-                break;
-            case Keys.None:
-                break;
-            case Keys.LButton:
-                break;
-            case Keys.RButton:
-                break;
-            case Keys.Cancel:
-                break;
-            case Keys.MButton:
-                break;
-            case Keys.XButton1:
-                break;
-            case Keys.XButton2:
-                break;
-            case Keys.Back:
-                break;
-            case Keys.Tab:
-                break;
-            case Keys.LineFeed:
-                break;
-            case Keys.Clear:
-                break;
-            case Keys.Return:
-                break;
-            case Keys.ShiftKey:
-                break;
-            case Keys.ControlKey:
-                break;
-            case Keys.Menu:
-                break;
-            case Keys.Pause:
-                break;
-            case Keys.Capital:
-                break;
-            case Keys.KanaMode:
-                break;
-            case Keys.JunjaMode:
-                break;
-            case Keys.FinalMode:
-                break;
-            case Keys.HanjaMode:
+            case Keys.Return: // ...and Enter
                 break;
             case Keys.Escape:
                 break;
@@ -317,6 +282,7 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.IMEModeChange:
                 break;
             case Keys.Space:
+                TypeCharacter(' ');
                 break;
             case Keys.Prior:
                 break;
@@ -327,6 +293,17 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Home:
                 break;
             case Keys.Left:
+                if (CursorX > 0)
+                {
+                    CursorX--;
+                    ShowKeyboardActivity();
+                }
+                else if (CursorY > 0)
+                {
+                    CursorX = CharactersWidth - 1;
+                    CursorY--;
+                    ShowKeyboardActivity();
+                }
                 break;
             case Keys.Up:
                 if (CursorY > 0)
@@ -336,6 +313,17 @@ public partial class TerminalMatrixControl : UserControl
                 }
                 break;
             case Keys.Right:
+                if (CursorX < CharactersWidth - 1)
+                {
+                    CursorX++;
+                    ShowKeyboardActivity();
+                }
+                else if (CursorY < CharactersHeight - 1)
+                {
+                    CursorX = 0;
+                    CursorY++;
+                    ShowKeyboardActivity();
+                }
                 break;
             case Keys.Down:
                 if (CursorY < CharactersHeight - 1)
@@ -345,16 +333,9 @@ public partial class TerminalMatrixControl : UserControl
                 }
                 else
                 {
-                    // TODO: Scroll!
+                    ScrollCharactersUp();
+                    ShowKeyboardActivity();
                 }
-                break;
-            case Keys.Select:
-                break;
-            case Keys.Print:
-                break;
-            case Keys.Execute:
-                break;
-            case Keys.Snapshot:
                 break;
             case Keys.Insert:
                 break;
@@ -383,10 +364,13 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.D9:
                 break;
             case Keys.A:
+                TypeCharacter('A');
                 break;
             case Keys.B:
+                TypeCharacter('B');
                 break;
             case Keys.C:
+                TypeCharacter('C');
                 break;
             case Keys.D:
                 break;
@@ -433,14 +417,6 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Y:
                 break;
             case Keys.Z:
-                break;
-            case Keys.LWin:
-                break;
-            case Keys.RWin:
-                break;
-            case Keys.Apps:
-                break;
-            case Keys.Sleep:
                 break;
             case Keys.NumPad0:
                 break;
@@ -538,42 +514,6 @@ public partial class TerminalMatrixControl : UserControl
                 break;
             case Keys.RMenu:
                 break;
-            case Keys.BrowserBack:
-                break;
-            case Keys.BrowserForward:
-                break;
-            case Keys.BrowserRefresh:
-                break;
-            case Keys.BrowserStop:
-                break;
-            case Keys.BrowserSearch:
-                break;
-            case Keys.BrowserFavorites:
-                break;
-            case Keys.BrowserHome:
-                break;
-            case Keys.VolumeMute:
-                break;
-            case Keys.VolumeDown:
-                break;
-            case Keys.VolumeUp:
-                break;
-            case Keys.MediaNextTrack:
-                break;
-            case Keys.MediaPreviousTrack:
-                break;
-            case Keys.MediaStop:
-                break;
-            case Keys.MediaPlayPause:
-                break;
-            case Keys.LaunchMail:
-                break;
-            case Keys.SelectMedia:
-                break;
-            case Keys.LaunchApplication1:
-                break;
-            case Keys.LaunchApplication2:
-                break;
             case Keys.OemSemicolon:
                 break;
             case Keys.Oemplus:
@@ -600,37 +540,12 @@ public partial class TerminalMatrixControl : UserControl
                 break;
             case Keys.OemBackslash:
                 break;
-            case Keys.ProcessKey:
-                break;
-            case Keys.Packet:
-                break;
-            case Keys.Attn:
-                break;
-            case Keys.Crsel:
-                break;
-            case Keys.Exsel:
-                break;
-            case Keys.EraseEof:
-                break;
-            case Keys.Play:
-                break;
-            case Keys.Zoom:
-                break;
-            case Keys.NoName:
-                break;
-            case Keys.Pa1:
-                break;
-            case Keys.OemClear:
-                break;
-            case Keys.Shift:
-                break;
-            case Keys.Control:
-                break;
-            case Keys.Alt:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
         }
         base.OnKeyDown(e);
+    }
+
+    private void ScrollCharactersUp()
+    {
+
     }
 }

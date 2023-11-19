@@ -9,18 +9,18 @@ public class TerminalCodePage
     {
         Chr = new Dictionary<int, char>
         {
-            { 0, ' ' },
-            { 1, 'A' },
-            { 2, 'B' },
-            { 3, 'C' }
+            { 32, ' ' },
+            { 65, 'A' },
+            { 66, 'B' },
+            { 67, 'C' }
         };
 
         Asc = new Dictionary<char, int>
         {
-            { ' ', 0 },
-            { 'A', 1 },
-            { 'B', 2 },
-            { 'C', 3 }
+            { ' ', 32 },
+            { 'A', 65 },
+            { 'B', 66 },
+            { 'C', 67 }
         };
     }
 }

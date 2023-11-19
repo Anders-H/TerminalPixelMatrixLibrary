@@ -16,6 +16,7 @@ public partial class TerminalMatrixControl : UserControl
     private readonly TerminalFont _font = new();
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;
+    private bool _isInInputState;
     public const int PixelsWidth = 640;
     public const int PixelsHeight = 200;
     public const int CharactersWidth = 80;
@@ -34,6 +35,7 @@ public partial class TerminalMatrixControl : UserControl
         _cursorVisibleBlink = false;
         _codePage = new TerminalCodePage();
         _palette = new Palette();
+        _isInInputState = false;
         CurrentCursorColor = (int)ColorName.Green;
         _timer.Interval = 1000;
         InitializeComponent();
@@ -65,7 +67,7 @@ public partial class TerminalMatrixControl : UserControl
     {
         for (var y = 0; y < CharactersHeight; y++)
             for (var x = 0; x < CharactersWidth; x++)
-                _characterMap[x, y] = 0;
+                _characterMap[x, y] = 32;
     }
 
     public void ClearPixelMap()
@@ -244,7 +246,22 @@ public partial class TerminalMatrixControl : UserControl
 
     private void TypeCharacter(char c)
     {
-        
+        _characterMap[CursorX, CursorY] = c;
+        _characterColorMap[CursorX, CursorY] = CurrentCursorColor;
+
+        if (CursorX < CharactersWidth - 1)
+        {
+            CursorX++;
+            ShowKeyboardActivity();
+        }
+        else if (_isInInputState && CursorY < CharactersHeight - 1)
+        {
+            CursorX = 0;
+            CursorY++;
+            ShowKeyboardActivity();
+        }
+
+        ShowKeyboardActivity();
     }
 
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)

@@ -1,11 +1,14 @@
-﻿namespace TerminalMatrix;
+﻿using System.CodeDom;
 
-public class TerminalFont : List<CharacterPixelMatrix>
+namespace TerminalMatrix;
+
+public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
 {
     public TerminalFont()
     {
-        // 0: Space
-        Add(new CharacterPixelMatrix(
+        var tcp = new TerminalCodePage();
+
+        Add(tcp.Asc[' '], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
             @",,,,,,,," +
@@ -15,8 +18,7 @@ public class TerminalFont : List<CharacterPixelMatrix>
             @",,,,,,,," +
             @",,,,,,,,"
         ));
-        // 1: A
-        Add(new CharacterPixelMatrix(
+        Add(tcp.Asc['A'], new CharacterPixelMatrix(
             @",,,**,,," +
             @",,****,," +
             @",**,,**," +
@@ -26,8 +28,7 @@ public class TerminalFont : List<CharacterPixelMatrix>
             @",**,,**," +
             @",,,,,,,,"
         ));
-        // 2: B
-        Add(new CharacterPixelMatrix(
+        Add(tcp.Asc['B'], new CharacterPixelMatrix(
             @",*****,," +
             @",**,,**," +
             @",**,,**," +
@@ -37,8 +38,7 @@ public class TerminalFont : List<CharacterPixelMatrix>
             @",*****,," +
             @",,,,,,,,"
         ));
-        // 3: C
-        Add(new CharacterPixelMatrix(
+        Add(tcp.Asc['C'], new CharacterPixelMatrix(
             @",,****,," +
             @",**,,**," +
             @",**,,,,," +

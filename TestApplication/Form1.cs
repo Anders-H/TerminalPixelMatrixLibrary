@@ -1,4 +1,4 @@
-using TerminalMatrix;
+using TerminalMatrix.TerminalColor;
 
 namespace TestApplication;
 

@@ -1,6 +1,7 @@
 ﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using TerminalMatrix.TerminalColor;
 
 namespace TerminalMatrix;
 
@@ -282,11 +283,23 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
+#if DEBUG
+        System.Diagnostics.Debug.WriteLine($@"Keypress: {e.KeyCode} ({e.KeyValue})");
+#endif
         switch (e.KeyCode)
         {
             case Keys.Back: // Backspace
                 break;
             case Keys.Return: // ...and Enter
+                if (_isInInputState)
+                {
+
+                }
+                else
+                {
+                    
+                }
+
                 break;
             case Keys.Escape:
                 break;
@@ -390,6 +403,7 @@ public partial class TerminalMatrixControl : UserControl
                 TypeCharacter('C');
                 break;
             case Keys.D:
+                TypeCharacter('D');
                 break;
             case Keys.E:
                 break;
@@ -462,6 +476,8 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Separator:
                 break;
             case Keys.Subtract:
+            case Keys.OemMinus:
+                TypeCharacter('-');
                 break;
             case Keys.Decimal:
                 break;
@@ -536,8 +552,6 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Oemplus:
                 break;
             case Keys.Oemcomma:
-                break;
-            case Keys.OemMinus:
                 break;
             case Keys.OemPeriod:
                 break;

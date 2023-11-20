@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace TerminalMatrix;
+namespace TerminalMatrix.TerminalColor;
 
 public class Palette : IEnumerable<Color>
 {

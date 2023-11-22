@@ -11,6 +11,7 @@ public partial class Form1 : Form
 
     private void Form1_Load(object sender, EventArgs e)
     {
+        terminalMatrixControl1.SetStartPosition(5, 5);
         terminalMatrixControl1.UpdateBitmap();
     }
 
@@ -22,8 +23,8 @@ public partial class Form1 : Form
         terminalMatrixControl1.VerticalLine(41, 10, 190, ColorName.White);
         terminalMatrixControl1.Box(ColorName.LightBlue, 43, 43, 63, 63);
         terminalMatrixControl1.PrintAt(ColorName.LightGreen, 20, 10, "ABAB BA");
-        terminalMatrixControl1.CursorX = 20;
-        terminalMatrixControl1.CursorY = 10;
+        terminalMatrixControl1.CursorPosition.X = 20;
+        terminalMatrixControl1.CursorPosition.Y = 10;
         terminalMatrixControl1.UpdateBitmap();
     }
 }

@@ -1,12 +1,16 @@
 ﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using TerminalMatrix.Definitions;
+using TerminalMatrix.Events;
 using TerminalMatrix.TerminalColor;
 
 namespace TerminalMatrix;
 
 public partial class TerminalMatrixControl : UserControl
 {
+    public event TypedLineDelegate? TypedLine;
+
     private readonly int[,] _characterColorMap;
     private readonly int[,] _characterMap;
     private readonly int[,] _pixelMap;
@@ -18,21 +22,19 @@ public partial class TerminalMatrixControl : UserControl
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;
     private bool _isInInputState;
-    public const int PixelsWidth = 640;
-    public const int PixelsHeight = 200;
-    public const int CharactersWidth = 80;
-    public const int CharactersHeight = 25;
     public Bitmap? Bitmap { get; private set; }
-    public int CursorX { get; set; }
-    public int CursorY { get; set; }
+    public Coordinate CursorPosition { get; }
+    public CoordinateList InputStart { get; }
     public int CurrentCursorColor { get; set; }
 
     public TerminalMatrixControl()
     {
-        _characterColorMap = new int[CharactersWidth, CharactersHeight];
-        _characterMap = new int[CharactersWidth, CharactersHeight];
-        _pixelMap = new int[PixelsWidth, PixelsHeight];
-        _bitmap = new int[PixelsWidth * PixelsHeight];
+        CursorPosition = new Coordinate(0, 0);
+        InputStart = new CoordinateList(0, 0);
+        _characterColorMap = CharacterMatrixDefinition.Create();
+        _characterMap = CharacterMatrixDefinition.Create();
+        _pixelMap = PixelMatrixDefinition.Create();
+        _bitmap = PixelMatrixDefinition.CreateBitmap();
         _cursorVisibleBlink = false;
         _codePage = new TerminalCodePage();
         _palette = new Palette();
@@ -50,6 +52,13 @@ public partial class TerminalMatrixControl : UserControl
         Clear();
     }
 
+    public void SetStartPosition(int x, int y)
+    {
+        CursorPosition.Set(x, y);
+        InputStart.Clear();
+        InputStart.Add(x, y);
+    }
+    
     private void Blink(object? sender, EventArgs e)
     {
         _cursorVisibleBlink = !_cursorVisibleBlink;
@@ -59,22 +68,22 @@ public partial class TerminalMatrixControl : UserControl
 
     public void ClearColorMap()
     {
-        for (var y = 0; y < CharactersHeight; y++)
-            for (var x = 0; x < CharactersWidth; x++)
+        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
+            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
                 _characterColorMap[x, y] = 1;
     }
 
     public void ClearCharacterMap()
     {
-        for (var y = 0; y < CharactersHeight; y++)
-            for (var x = 0; x < CharactersWidth; x++)
+        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
+            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
                 _characterMap[x, y] = 32;
     }
 
     public void ClearPixelMap()
     {
-        for (var y = 0; y < PixelsHeight; y++)
-            for (var x = 0; x < PixelsWidth; x++)
+        for (var y = 0; y < PixelMatrixDefinition.Height; y++)
+            for (var x = 0; x < PixelMatrixDefinition.Width; x++)
                 _pixelMap[x, y] = 0;
     }
 
@@ -89,7 +98,7 @@ public partial class TerminalMatrixControl : UserControl
     {
         var c = (int)color;
 
-        for (var x = 0; x < PixelsWidth; x++)
+        for (var x = 0; x < PixelMatrixDefinition.Width; x++)
             _pixelMap[x, y] = c;
     }
 
@@ -105,7 +114,7 @@ public partial class TerminalMatrixControl : UserControl
     {
         var c = (int)color;
 
-        for (var y = 0; y < PixelsHeight; y++)
+        for (var y = 0; y < PixelMatrixDefinition.Height; y++)
             _pixelMap[x, y] = c;
     }
 
@@ -148,64 +157,63 @@ public partial class TerminalMatrixControl : UserControl
     public void UpdateBitmap()
     {
         var bitsHandle = GCHandle.Alloc(_bitmap, GCHandleType.Pinned);
-        Bitmap = new Bitmap(PixelsWidth, PixelsHeight, PixelsWidth * 4, PixelFormat.Format32bppArgb, bitsHandle.AddrOfPinnedObject());
+        Bitmap = new Bitmap(PixelMatrixDefinition.Width, PixelMatrixDefinition.Height, PixelMatrixDefinition.Width * 4, PixelFormat.Format32bppArgb, bitsHandle.AddrOfPinnedObject());
 
-        var data = Bitmap.LockBits(new Rectangle(0, 0, PixelsWidth, PixelsHeight), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
+        var data = Bitmap.LockBits(new Rectangle(0, 0, PixelMatrixDefinition.Width, PixelMatrixDefinition.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
-        for (var y = 0; y < PixelsHeight; y++)
+        for (var y = 0; y < PixelMatrixDefinition.Height; y++)
         {
-            for (var x = 0; x < PixelsWidth; x++)
+            for (var x = 0; x < PixelMatrixDefinition.Width; x++)
             {
-                var index = x + y * PixelsWidth;
+                var index = x + y * PixelMatrixDefinition.Width;
                 _bitmap[index] = _palette.GetColor(_pixelMap[x, y]).ToArgb();
             }
         }
 
-        for (var y = 0; y < CharactersHeight; y++)
+        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
         {
-            for (var x = 0; x < CharactersWidth; x++)
+            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             {
                 var characterFont = _font[_characterMap[x, y]];
                 var c = _palette.GetColor(ColorName.Green).ToArgb();
-                var pixelXStart = x * 8;
-                var pixelYStart = y * 8;
-                var sourceX = 0;
-                var sourceY = 0;
+                var pixelStart = new Coordinate(x * 8, y * 8);
+                var source = new Coordinate(0, 0);
 
-                if (x == CursorX && y == CursorY)
+                if (CursorPosition.IsSame(x, y))
                 {
-                    for (var pixelY = pixelYStart; pixelY < pixelYStart + 8; pixelY++)
+                    for (var pixelY = pixelStart.Y; pixelY < pixelStart.Y + 8; pixelY++)
                     {
-                        for (var pixelX = pixelXStart; pixelX < pixelXStart + 8; pixelX++)
+                        for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
                         {
-                            var index = pixelX + pixelY * PixelsWidth;
+                         
+                            var index = pixelX + pixelY * PixelMatrixDefinition.Width;
+                            
                             if (_cursorVisibleBlink)
-                                _bitmap[index] = characterFont.Pixels[sourceX, sourceY] ? c : 0;
+                                _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? c : 0;
                             else
-                                _bitmap[index] = characterFont.Pixels[sourceX, sourceY] ? 0 : c;
+                                _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? 0 : c;
 
-                            sourceX++;
+                            source.X++;
                         }
 
-                        sourceX = 0;
-                        sourceY++;
+                        source.NextRow();
                     }
                 }
                 else if (_characterMap[x, y] > 0)
                 {
-                    for (var pixelY = pixelYStart; pixelY < pixelYStart + 8; pixelY++)
+                    for (var pixelY = pixelStart.Y; pixelY < pixelStart.Y + 8; pixelY++)
                     {
-                        for (var pixelX = pixelXStart; pixelX < pixelXStart + 8; pixelX++)
+                        for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
                         {
-                            var index = pixelX + pixelY * PixelsWidth;
-                            if (characterFont.Pixels[sourceX, sourceY])
+                            var index = pixelX + pixelY * PixelMatrixDefinition.Width;
+                            
+                            if (characterFont.Pixels[source.X, source.Y])
                                 _bitmap[index] = c;
 
-                            sourceX++;
+                            source.X++;
                         }
 
-                        sourceX = 0;
-                        sourceY++;
+                        source.NextRow();
                     }
                 }
             }
@@ -229,9 +237,9 @@ public partial class TerminalMatrixControl : UserControl
             return;
 
         e.Graphics.CompositingMode = CompositingMode.SourceCopy;
-        e.Graphics.CompositingQuality = CompositingQuality.HighQuality;
-        e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
-        e.Graphics.SmoothingMode = SmoothingMode.None;
+        e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
+        e.Graphics.InterpolationMode = InterpolationMode.Low; // This should be an option
+        e.Graphics.SmoothingMode = SmoothingMode.HighSpeed;
         e.Graphics.DrawImage(Bitmap, 0, 0, Width, Height);
         base.OnPaint(e);
     }
@@ -247,18 +255,18 @@ public partial class TerminalMatrixControl : UserControl
 
     private void TypeCharacter(char c)
     {
-        _characterMap[CursorX, CursorY] = c;
-        _characterColorMap[CursorX, CursorY] = CurrentCursorColor;
+        _characterMap[CursorPosition.X, CursorPosition.Y] = c;
+        _characterColorMap[CursorPosition.X, CursorPosition.Y] = CurrentCursorColor;
 
-        if (CursorX < CharactersWidth - 1)
+        if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
         {
-            CursorX++;
+            CursorPosition.X++;
             ShowKeyboardActivity();
         }
-        else if (_isInInputState && CursorY < CharactersHeight - 1)
+        else if (_isInInputState && CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
         {
-            CursorX = 0;
-            CursorY++;
+            CursorPosition.X = 0;
+            CursorPosition.Y++;
             ShowKeyboardActivity();
         }
 
@@ -291,15 +299,20 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Back: // Backspace
                 break;
             case Keys.Return: // ...and Enter
+
+
                 if (_isInInputState)
                 {
 
                 }
                 else
                 {
-                    
-                }
+                    var inputValue = new InputFinder(_characterMap, InputStart)
+                        .GetInput(CursorPosition, out var inputStart);
 
+                    if (CursorPosition > inputStart && !string.IsNullOrEmpty(inputValue))
+                        TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
+                }
                 break;
             case Keys.Escape:
                 break;
@@ -323,42 +336,42 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Home:
                 break;
             case Keys.Left:
-                if (CursorX > 0)
+                if (CursorPosition.X > 0)
                 {
-                    CursorX--;
+                    CursorPosition.X--;
                     ShowKeyboardActivity();
                 }
-                else if (CursorY > 0)
+                else if (CursorPosition.Y > 0)
                 {
-                    CursorX = CharactersWidth - 1;
-                    CursorY--;
+                    CursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                    CursorPosition.Y--;
                     ShowKeyboardActivity();
                 }
                 break;
             case Keys.Up:
-                if (CursorY > 0)
+                if (CursorPosition.Y > 0)
                 {
-                    CursorY--;
+                    CursorPosition.Y--;
                     ShowKeyboardActivity();
                 }
                 break;
             case Keys.Right:
-                if (CursorX < CharactersWidth - 1)
+                if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
                 {
-                    CursorX++;
+                    CursorPosition.X++;
                     ShowKeyboardActivity();
                 }
-                else if (CursorY < CharactersHeight - 1)
+                else if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
                 {
-                    CursorX = 0;
-                    CursorY++;
+                    CursorPosition.X = 0;
+                    CursorPosition.Y++;
                     ShowKeyboardActivity();
                 }
                 break;
             case Keys.Down:
-                if (CursorY < CharactersHeight - 1)
+                if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
                 {
-                    CursorY++;
+                    CursorPosition.Y++;
                     ShowKeyboardActivity();
                 }
                 else
@@ -406,6 +419,7 @@ public partial class TerminalMatrixControl : UserControl
                 TypeCharacter('D');
                 break;
             case Keys.E:
+                TypeCharacter('E');
                 break;
             case Keys.F:
                 break;

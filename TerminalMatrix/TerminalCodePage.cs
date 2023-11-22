@@ -14,7 +14,8 @@ public class TerminalCodePage
             { 65, 'A' },
             { 66, 'B' },
             { 67, 'C' },
-            { 68, 'D' }
+            { 68, 'D' },
+            { 69, 'E' }
         };
 
         Asc = new Dictionary<char, int>
@@ -24,7 +25,8 @@ public class TerminalCodePage
             { 'A', 65 },
             { 'B', 66 },
             { 'C', 67 },
-            { 'D', 68 }
+            { 'D', 68 },
+            { 'E', 69 }
         };
     }
 }

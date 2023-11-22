@@ -1,4 +1,6 @@
-﻿namespace TerminalMatrix;
+﻿using TerminalMatrix.Definitions;
+
+namespace TerminalMatrix;
 
 public class Coordinate
 {
@@ -35,6 +37,46 @@ public class Coordinate
     {
         X = 0;
         Y++;
+    }
+
+    public bool MoveNext()
+    {
+        if (X < CharacterMatrixDefinition.Width - 1)
+        {
+            X++;
+            return true;
+        }
+
+        if (Y < CharacterMatrixDefinition.Height - 1)
+        {
+            Y++;
+            X = 0;
+            return true;
+        }
+
+        X = CharacterMatrixDefinition.Width - 1;
+        Y = CharacterMatrixDefinition.Height - 1;
+        return false;
+    }
+
+    public bool MovePrevious()
+    {
+        if (X > 0)
+        {
+            X--;
+            return true;
+        }
+
+        if (Y > 0)
+        {
+            Y--;
+            X = CharacterMatrixDefinition.Width - 1;
+            return true;
+        }
+
+        X = 0;
+        X = 0;
+        return false;
     }
 
     public static bool operator >(Coordinate? a, Coordinate? b)

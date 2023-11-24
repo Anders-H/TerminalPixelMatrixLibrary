@@ -303,9 +303,13 @@ public partial class TerminalMatrixControl : UserControl
 
                 if (_isInInputState)
                 {
+                    var inputValue = new InputFinder(_characterMap, InputStart)
+                        .GetInput(CursorPosition, out var inputStart);
 
+                    if (CursorPosition > inputStart && !string.IsNullOrEmpty(inputValue))
+                        TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
                 }
-                else
+                else // TODO: Criteria here?
                 {
                     var inputValue = new InputFinder(_characterMap, InputStart)
                         .GetInput(CursorPosition, out var inputStart);

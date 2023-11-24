@@ -13,6 +13,9 @@ public class Coordinate
         Y = y;
     }
 
+    public Coordinate Copy() =>
+        new(X, Y);
+
     public bool IsSame(int x, int y) =>
         X == x && Y == y;
 
@@ -106,4 +109,7 @@ public class Coordinate
 
         return a.X < b.X;
     }
+
+    public override string ToString() =>
+        $"({X}, {Y})";
 }

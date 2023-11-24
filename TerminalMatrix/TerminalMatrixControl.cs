@@ -313,6 +313,8 @@ public partial class TerminalMatrixControl : UserControl
                     if (CursorPosition > inputStart && !string.IsNullOrEmpty(inputValue))
                         TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
                 }
+
+                InputStart.Add(CursorPosition.Copy());
                 break;
             case Keys.Escape:
                 break;

@@ -13,4 +13,7 @@ public class CoordinateList : List<Coordinate>
 
     public void Add(int x, int y) =>
         Add(new Coordinate(x, y));
+
+    public bool HitTest(Coordinate c) =>
+        this.Any(coordinate => coordinate.IsSame(c));
 }

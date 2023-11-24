@@ -27,4 +27,9 @@ public partial class Form1 : Form
         terminalMatrixControl1.CursorPosition.Y = 10;
         terminalMatrixControl1.UpdateBitmap();
     }
+
+    private void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
+    {
+        MessageBox.Show($@"({e.InputStart.X}, {e.InputStart.Y})-({e.InputEnd.X}, {e.InputEnd.Y})  ""{e.InputValue}""");
+    }
 }

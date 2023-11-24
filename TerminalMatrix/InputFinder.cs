@@ -33,7 +33,8 @@ public class InputFinder
         {
             result.Append((char)_chars[counter.X, counter.Y]);
             counter.MoveNext();
-        } while (counter.MoveNext());
+            // ReSharper disable once LoopVariableIsNeverChangedInsideLoop
+        } while (counter < enterPressedAt);
 
         return result.ToString();
     }

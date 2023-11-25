@@ -10,6 +10,7 @@ namespace TerminalMatrix;
 public partial class TerminalMatrixControl : UserControl
 {
     public event TypedLineDelegate? TypedLine;
+    public event InputCompletedDelegate? InputCompleted;
 
     private readonly int[,] _characterColorMap;
     private readonly int[,] _characterMap;
@@ -21,7 +22,7 @@ public partial class TerminalMatrixControl : UserControl
     private readonly TerminalFont _font = new();
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;
-    private bool _isInInputState;
+    private TerminalState TerminalState { get; }
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
     public CoordinateList InputStart { get; }
@@ -38,7 +39,7 @@ public partial class TerminalMatrixControl : UserControl
         _cursorVisibleBlink = false;
         _codePage = new TerminalCodePage();
         _palette = new Palette();
-        _isInInputState = false;
+        TerminalState = new TerminalState();
         CurrentCursorColor = (int)ColorName.Green;
         _timer.Interval = 1000;
         InitializeComponent();
@@ -219,6 +220,12 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
+#if DEBUG
+        foreach (var c in InputStart)
+        {
+            _bitmap[c.X * 8 + c.Y * 8 * PixelMatrixDefinition.Width] = _cursorVisibleBlink ? Color.White.ToArgb() : Color.Purple.ToArgb();
+        }
+#endif
         Bitmap.UnlockBits(data);
         bitsHandle.Free();
 
@@ -263,7 +270,7 @@ public partial class TerminalMatrixControl : UserControl
             CursorPosition.X++;
             ShowKeyboardActivity();
         }
-        else if (_isInInputState && CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+        else if (TerminalState.InputMode && CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
         {
             CursorPosition.X = 0;
             CursorPosition.Y++;
@@ -299,26 +306,31 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Back: // Backspace
                 break;
             case Keys.Return: // ...and Enter
-
-
-                if (_isInInputState)
+                if (TerminalState.InputMode)
                 {
+                    // TODO Other logic for finding start.
+
                     var inputValue = new InputFinder(_characterMap, InputStart)
                         .GetInput(CursorPosition, out var inputStart);
 
-                    if (CursorPosition > inputStart && !string.IsNullOrEmpty(inputValue))
-                        TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
+                    InputCompleted?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
                 }
-                else // TODO: Criteria here?
+                else
                 {
                     var inputValue = new InputFinder(_characterMap, InputStart)
                         .GetInput(CursorPosition, out var inputStart);
 
-                    if (CursorPosition > inputStart && !string.IsNullOrEmpty(inputValue))
-                        TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
+                    TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
                 }
 
                 InputStart.Add(CursorPosition.Copy());
+                CursorPosition.X = 0;
+
+                if (CursorPosition.CanMoveDown())
+                    CursorPosition.Y++;
+                else
+                    Scroll();
+
                 break;
             case Keys.Escape:
                 break;
@@ -382,7 +394,7 @@ public partial class TerminalMatrixControl : UserControl
                 }
                 else
                 {
-                    ScrollCharactersUp();
+                    Scroll();
                     ShowKeyboardActivity();
                 }
                 break;
@@ -595,7 +607,19 @@ public partial class TerminalMatrixControl : UserControl
         base.OnKeyDown(e);
     }
 
-    private void ScrollCharactersUp()
+    private void Scroll()
+    {
+        ScrollGraphics(_pixelMap);
+        ScollCharacterMap(_characterColorMap);
+        ScollCharacterMap(_characterMap);
+    }
+
+    private void ScrollGraphics(int[,] pixelMap)
+    {
+
+    }
+
+    private void ScollCharacterMap(int[,] characterMap)
     {
 
     }

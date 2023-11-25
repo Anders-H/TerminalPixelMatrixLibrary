@@ -110,6 +110,9 @@ public class Coordinate
         return a.X < b.X;
     }
 
+    public bool CanMoveDown() =>
+    Y < CharacterMatrixDefinition.Height - 1;
+
     public override string ToString() =>
         $"({X}, {Y})";
 }

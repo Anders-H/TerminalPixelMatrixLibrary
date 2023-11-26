@@ -1,6 +1,4 @@
-﻿using System.CodeDom;
-
-namespace TerminalMatrix;
+﻿namespace TerminalMatrix;
 
 public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
 {
@@ -66,6 +64,46 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
             @",**,,,,," +
             @",**,,,,," +
             @",******," +
+            @",,,,,,,,"
+        ));
+        Add(tcp.Asc['F'], new CharacterPixelMatrix(
+            @",******," +
+            @",**,,,,," +
+            @",**,,,,," +
+            @",****,,," +
+            @",**,,,,," +
+            @",**,,,,," +
+            @",**,,,,," +
+            @",,,,,,,,"
+        ));
+        Add(tcp.Asc['G'], new CharacterPixelMatrix(
+            @",,****,," +
+            @",**,,**," +
+            @",**,,,,," +
+            @",**,***," +
+            @",**,,**," +
+            @",**,,**," +
+            @",,****,," +
+            @",,,,,,,,"
+        ));
+        Add(tcp.Asc['H'], new CharacterPixelMatrix(
+            @",**,,**," +
+            @",**,,**," +
+            @",**,,**," +
+            @",******," +
+            @",**,,**," +
+            @",**,,**," +
+            @",**,,**," +
+            @",,,,,,,,"
+        ));
+        Add(tcp.Asc['I'], new CharacterPixelMatrix(
+            @",,****,," +
+            @",,,**,,," +
+            @",,,**,,," +
+            @",,,**,,," +
+            @",,,**,,," +
+            @",,,**,,," +
+            @",,****,," +
             @",,,,,,,,"
         ));
         Add(tcp.Asc['-'], new CharacterPixelMatrix(

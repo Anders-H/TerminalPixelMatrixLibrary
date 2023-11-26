@@ -36,6 +36,9 @@ public class Coordinate
         return this;
     }
 
+    public void Scroll() =>
+        Y--;
+
     public void NextRow()
     {
         X = 0;

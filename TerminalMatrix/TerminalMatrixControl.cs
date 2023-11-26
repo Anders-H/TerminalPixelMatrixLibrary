@@ -59,7 +59,7 @@ public partial class TerminalMatrixControl : UserControl
         InputStart.Clear();
         InputStart.Add(x, y);
     }
-    
+
     private void Blink(object? sender, EventArgs e)
     {
         _cursorVisibleBlink = !_cursorVisibleBlink;
@@ -186,9 +186,9 @@ public partial class TerminalMatrixControl : UserControl
                     {
                         for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
                         {
-                         
+
                             var index = pixelX + pixelY * PixelMatrixDefinition.Width;
-                            
+
                             if (_cursorVisibleBlink)
                                 _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? c : 0;
                             else
@@ -207,7 +207,7 @@ public partial class TerminalMatrixControl : UserControl
                         for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
                         {
                             var index = pixelX + pixelY * PixelMatrixDefinition.Width;
-                            
+
                             if (characterFont.Pixels[source.X, source.Y])
                                 _bitmap[index] = c;
 
@@ -323,7 +323,6 @@ public partial class TerminalMatrixControl : UserControl
                     TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
                 }
 
-                InputStart.Add(CursorPosition.Copy());
                 CursorPosition.X = 0;
 
                 if (CursorPosition.CanMoveDown())
@@ -331,6 +330,11 @@ public partial class TerminalMatrixControl : UserControl
                 else
                     Scroll();
 
+                InputStart.Add(CursorPosition.Copy());
+                _timer.Enabled = false;
+                _cursorVisibleBlink = true;
+                ShowKeyboardActivity();
+                _timer.Enabled = true;
                 break;
             case Keys.Escape:
                 break;
@@ -440,12 +444,16 @@ public partial class TerminalMatrixControl : UserControl
                 TypeCharacter('E');
                 break;
             case Keys.F:
+                TypeCharacter('F');
                 break;
             case Keys.G:
+                TypeCharacter('G');
                 break;
             case Keys.H:
+                TypeCharacter('H');
                 break;
             case Keys.I:
+                TypeCharacter('I');
                 break;
             case Keys.J:
                 break;
@@ -607,20 +615,38 @@ public partial class TerminalMatrixControl : UserControl
         base.OnKeyDown(e);
     }
 
-    private void Scroll()
+    private new void Scroll()
     {
-        ScrollGraphics(_pixelMap);
-        ScollCharacterMap(_characterColorMap);
-        ScollCharacterMap(_characterMap);
+        ScrollCharacterMap(_characterColorMap, 0);
+        ScrollCharacterMap(_characterMap, ' ');
+
+        foreach (var c in InputStart)
+        {
+            c.Scroll();
+        }
+
+        var again = false;
+
+        do
+        {
+            foreach (var c in InputStart.Where(c => c.Y < 0))
+            {
+                InputStart.Remove(c);
+                again = true;
+                break;
+            }
+        } while (again);
     }
 
-    private void ScrollGraphics(int[,] pixelMap)
+    private void ScrollCharacterMap(int[,] characterMap, int blank)
     {
+        for (var y = 1; y < CharacterMatrixDefinition.Height; y++)
+            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+                characterMap[x, y - 1] = characterMap[x, y];
 
-    }
+        const int last = CharacterMatrixDefinition.Height - 1;
 
-    private void ScollCharacterMap(int[,] characterMap)
-    {
-
+        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+            characterMap[x, last] = blank;
     }
 }

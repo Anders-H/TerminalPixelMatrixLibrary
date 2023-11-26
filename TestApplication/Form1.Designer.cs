@@ -29,7 +29,6 @@
         private void InitializeComponent()
         {
             terminalMatrixControl1 = new TerminalMatrix.TerminalMatrixControl();
-            button1 = new Button();
             SuspendLayout();
             // 
             // terminalMatrixControl1
@@ -42,22 +41,11 @@
             terminalMatrixControl1.TabIndex = 0;
             terminalMatrixControl1.TypedLine += terminalMatrixControl1_TypedLine;
             // 
-            // button1
-            // 
-            button1.Location = new Point(148, 400);
-            button1.Name = "button1";
-            button1.Size = new Size(75, 23);
-            button1.TabIndex = 1;
-            button1.Text = "button1";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
-            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1054, 691);
-            Controls.Add(button1);
             Controls.Add(terminalMatrixControl1);
             DoubleBuffered = true;
             Name = "Form1";
@@ -69,6 +57,5 @@
         #endregion
 
         private TerminalMatrix.TerminalMatrixControl terminalMatrixControl1;
-        private Button button1;
     }
 }

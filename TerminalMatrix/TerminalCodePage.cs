@@ -19,7 +19,9 @@ public class TerminalCodePage
             { 70, 'F' },
             { 71, 'G' },
             { 72, 'H' },
-            { 73, 'I' }
+            { 73, 'I' },
+            { 74, 'J' },
+            { 75, 'K' }
         };
 
         Asc = new Dictionary<char, int>
@@ -34,7 +36,9 @@ public class TerminalCodePage
             { 'F', 70 },
             { 'G', 71 },
             { 'H', 72 },
-            { 'I', 73 }
+            { 'I', 73 },
+            { 'J', 74 },
+            { 'K', 75 }
         };
     }
 }

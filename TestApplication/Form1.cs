@@ -21,14 +21,14 @@ public partial class Form1 : Form
 
         if (e.InputValue == "IA")
         {
+            e.CancelNewLine = true;
             terminalMatrixControl1.HorizontalLine(40, ColorName.Cyan);
             terminalMatrixControl1.HorizontalLine(10, 41, 630, ColorName.DarkGrey);
             terminalMatrixControl1.VerticalLine(40, ColorName.Green);
             terminalMatrixControl1.VerticalLine(41, 10, 190, ColorName.White);
             terminalMatrixControl1.Box(ColorName.LightBlue, 43, 43, 63, 63);
             terminalMatrixControl1.PrintAt(ColorName.LightGreen, 20, 10, "ABAB BA");
-            terminalMatrixControl1.CursorPosition.X = 20;
-            terminalMatrixControl1.CursorPosition.Y = 10;
+            terminalMatrixControl1.SetStartPosition(20, 10);
             terminalMatrixControl1.UpdateBitmap();
         }
     }

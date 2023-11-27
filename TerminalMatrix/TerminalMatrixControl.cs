@@ -306,29 +306,34 @@ public partial class TerminalMatrixControl : UserControl
             case Keys.Back: // Backspace
                 break;
             case Keys.Return: // ...and Enter
+                TypedLineEventArgs? eventArgs;
+
                 if (TerminalState.InputMode)
                 {
-                    // TODO Other logic for finding start.
-
                     var inputValue = new InputFinder(_characterMap, InputStart)
                         .GetInput(CursorPosition, out var inputStart);
 
-                    InputCompleted?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
+                    eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
+                    InputCompleted?.Invoke(this, eventArgs);
                 }
                 else
                 {
                     var inputValue = new InputFinder(_characterMap, InputStart)
                         .GetInput(CursorPosition, out var inputStart);
 
-                    TypedLine?.Invoke(this, new TypedLineEventArgs(inputStart, CursorPosition, inputValue));
+                    eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
+                    TypedLine?.Invoke(this, eventArgs);
                 }
 
-                CursorPosition.X = 0;
+                if (!eventArgs.CancelNewLine)
+                {
+                    CursorPosition.X = 0;
 
-                if (CursorPosition.CanMoveDown())
-                    CursorPosition.Y++;
-                else
-                    Scroll();
+                    if (CursorPosition.CanMoveDown())
+                        CursorPosition.Y++;
+                    else
+                        Scroll();
+                }
 
                 InputStart.Add(CursorPosition.Copy());
                 _timer.Enabled = false;
@@ -456,8 +461,10 @@ public partial class TerminalMatrixControl : UserControl
                 TypeCharacter('I');
                 break;
             case Keys.J:
+                TypeCharacter('J');
                 break;
             case Keys.K:
+                TypeCharacter('K');
                 break;
             case Keys.L:
                 break;

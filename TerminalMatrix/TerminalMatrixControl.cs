@@ -23,6 +23,7 @@ public partial class TerminalMatrixControl : UserControl
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;
     private TerminalState TerminalState { get; }
+    private readonly TerminalMatrixKeypressHandler _keypressHandler;
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
     public CoordinateList InputStart { get; }
@@ -40,6 +41,7 @@ public partial class TerminalMatrixControl : UserControl
         _codePage = new TerminalCodePage();
         _palette = new Palette();
         TerminalState = new TerminalState();
+        _keypressHandler = new TerminalMatrixKeypressHandler(_characterMap);
         CurrentCursorColor = (int)ColorName.Green;
         _timer.Interval = 1000;
         InitializeComponent();
@@ -301,325 +303,46 @@ public partial class TerminalMatrixControl : UserControl
 #if DEBUG
         System.Diagnostics.Debug.WriteLine($@"Keypress: {e.KeyCode} ({e.KeyValue})");
 #endif
-        switch (e.KeyCode)
-        {
-            case Keys.Back: // Backspace
-                break;
-            case Keys.Return: // ...and Enter
-                TypedLineEventArgs? eventArgs;
-
-                if (TerminalState.InputMode)
-                {
-                    var inputValue = new InputFinder(_characterMap, InputStart)
-                        .GetInput(CursorPosition, out var inputStart);
-
-                    eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
-                    InputCompleted?.Invoke(this, eventArgs);
-                }
-                else
-                {
-                    var inputValue = new InputFinder(_characterMap, InputStart)
-                        .GetInput(CursorPosition, out var inputStart);
-
-                    eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
-                    TypedLine?.Invoke(this, eventArgs);
-                }
-
-                if (!eventArgs.CancelNewLine)
-                {
-                    CursorPosition.X = 0;
-
-                    if (CursorPosition.CanMoveDown())
-                        CursorPosition.Y++;
-                    else
-                        Scroll();
-                }
-
-                InputStart.Add(CursorPosition.Copy());
-                _timer.Enabled = false;
-                _cursorVisibleBlink = true;
-                ShowKeyboardActivity();
-                _timer.Enabled = true;
-                break;
-            case Keys.Escape:
-                break;
-            case Keys.IMEConvert:
-                break;
-            case Keys.IMENonconvert:
-                break;
-            case Keys.IMEAccept:
-                break;
-            case Keys.IMEModeChange:
-                break;
-            case Keys.Space:
-                TypeCharacter(' ');
-                break;
-            case Keys.Prior:
-                break;
-            case Keys.Next:
-                break;
-            case Keys.End:
-                break;
-            case Keys.Home:
-                break;
-            case Keys.Left:
-                if (CursorPosition.X > 0)
-                {
-                    CursorPosition.X--;
-                    ShowKeyboardActivity();
-                }
-                else if (CursorPosition.Y > 0)
-                {
-                    CursorPosition.X = CharacterMatrixDefinition.Width - 1;
-                    CursorPosition.Y--;
-                    ShowKeyboardActivity();
-                }
-                break;
-            case Keys.Up:
-                if (CursorPosition.Y > 0)
-                {
-                    CursorPosition.Y--;
-                    ShowKeyboardActivity();
-                }
-                break;
-            case Keys.Right:
-                if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
-                {
-                    CursorPosition.X++;
-                    ShowKeyboardActivity();
-                }
-                else if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
-                {
-                    CursorPosition.X = 0;
-                    CursorPosition.Y++;
-                    ShowKeyboardActivity();
-                }
-                break;
-            case Keys.Down:
-                if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
-                {
-                    CursorPosition.Y++;
-                    ShowKeyboardActivity();
-                }
-                else
-                {
-                    Scroll();
-                    ShowKeyboardActivity();
-                }
-                break;
-            case Keys.Insert:
-                break;
-            case Keys.Delete:
-                break;
-            case Keys.Help:
-                break;
-            case Keys.D0:
-                break;
-            case Keys.D1:
-                break;
-            case Keys.D2:
-                break;
-            case Keys.D3:
-                break;
-            case Keys.D4:
-                break;
-            case Keys.D5:
-                break;
-            case Keys.D6:
-                break;
-            case Keys.D7:
-                break;
-            case Keys.D8:
-                break;
-            case Keys.D9:
-                break;
-            case Keys.A:
-                TypeCharacter('A');
-                break;
-            case Keys.B:
-                TypeCharacter('B');
-                break;
-            case Keys.C:
-                TypeCharacter('C');
-                break;
-            case Keys.D:
-                TypeCharacter('D');
-                break;
-            case Keys.E:
-                TypeCharacter('E');
-                break;
-            case Keys.F:
-                TypeCharacter('F');
-                break;
-            case Keys.G:
-                TypeCharacter('G');
-                break;
-            case Keys.H:
-                TypeCharacter('H');
-                break;
-            case Keys.I:
-                TypeCharacter('I');
-                break;
-            case Keys.J:
-                TypeCharacter('J');
-                break;
-            case Keys.K:
-                TypeCharacter('K');
-                break;
-            case Keys.L:
-                break;
-            case Keys.M:
-                break;
-            case Keys.N:
-                break;
-            case Keys.O:
-                break;
-            case Keys.P:
-                break;
-            case Keys.Q:
-                break;
-            case Keys.R:
-                break;
-            case Keys.S:
-                break;
-            case Keys.T:
-                break;
-            case Keys.U:
-                break;
-            case Keys.V:
-                break;
-            case Keys.W:
-                break;
-            case Keys.X:
-                break;
-            case Keys.Y:
-                break;
-            case Keys.Z:
-                break;
-            case Keys.NumPad0:
-                break;
-            case Keys.NumPad1:
-                break;
-            case Keys.NumPad2:
-                break;
-            case Keys.NumPad3:
-                break;
-            case Keys.NumPad4:
-                break;
-            case Keys.NumPad5:
-                break;
-            case Keys.NumPad6:
-                break;
-            case Keys.NumPad7:
-                break;
-            case Keys.NumPad8:
-                break;
-            case Keys.NumPad9:
-                break;
-            case Keys.Multiply:
-                break;
-            case Keys.Add:
-                break;
-            case Keys.Separator:
-                break;
-            case Keys.Subtract:
-            case Keys.OemMinus:
-                TypeCharacter('-');
-                break;
-            case Keys.Decimal:
-                break;
-            case Keys.Divide:
-                break;
-            case Keys.F1:
-                break;
-            case Keys.F2:
-                break;
-            case Keys.F3:
-                break;
-            case Keys.F4:
-                break;
-            case Keys.F5:
-                break;
-            case Keys.F6:
-                break;
-            case Keys.F7:
-                break;
-            case Keys.F8:
-                break;
-            case Keys.F9:
-                break;
-            case Keys.F10:
-                break;
-            case Keys.F11:
-                break;
-            case Keys.F12:
-                break;
-            case Keys.F13:
-                break;
-            case Keys.F14:
-                break;
-            case Keys.F15:
-                break;
-            case Keys.F16:
-                break;
-            case Keys.F17:
-                break;
-            case Keys.F18:
-                break;
-            case Keys.F19:
-                break;
-            case Keys.F20:
-                break;
-            case Keys.F21:
-                break;
-            case Keys.F22:
-                break;
-            case Keys.F23:
-                break;
-            case Keys.F24:
-                break;
-            case Keys.NumLock:
-                break;
-            case Keys.Scroll:
-                break;
-            case Keys.LShiftKey:
-                break;
-            case Keys.RShiftKey:
-                break;
-            case Keys.LControlKey:
-                break;
-            case Keys.RControlKey:
-                break;
-            case Keys.LMenu:
-                break;
-            case Keys.RMenu:
-                break;
-            case Keys.OemSemicolon:
-                break;
-            case Keys.Oemplus:
-                break;
-            case Keys.Oemcomma:
-                break;
-            case Keys.OemPeriod:
-                break;
-            case Keys.OemQuestion:
-                break;
-            case Keys.Oemtilde:
-                break;
-            case Keys.OemOpenBrackets:
-                break;
-            case Keys.OemPipe:
-                break;
-            case Keys.OemCloseBrackets:
-                break;
-            case Keys.OemQuotes:
-                break;
-            case Keys.Oem8:
-                break;
-            case Keys.OemBackslash:
-                break;
-        }
+        _keypressHandler.HandleKeyDown(e, TerminalState.InputMode);
         base.OnKeyDown(e);
+    }
+
+    internal void HandleEnter()
+    {
+        TypedLineEventArgs? eventArgs;
+
+        if (TerminalState.InputMode)
+        {
+            var inputValue = new InputFinder(_characterMap, InputStart)
+                .GetInput(CursorPosition, out var inputStart);
+
+            eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
+            InputCompleted?.Invoke(this, eventArgs);
+        }
+        else
+        {
+            var inputValue = new InputFinder(_characterMap, InputStart)
+                .GetInput(CursorPosition, out var inputStart);
+
+            eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
+            TypedLine?.Invoke(this, eventArgs);
+        }
+
+        if (!eventArgs.CancelNewLine)
+        {
+            CursorPosition.X = 0;
+
+            if (CursorPosition.CanMoveDown())
+                CursorPosition.Y++;
+            else
+                Scroll();
+        }
+
+        InputStart.Add(CursorPosition.Copy());
+        _timer.Enabled = false;
+        _cursorVisibleBlink = true;
+        ShowKeyboardActivity();
+        _timer.Enabled = true;
     }
 
     private new void Scroll()

@@ -1,20 +1,17 @@
 ﻿using TerminalMatrix.Definitions;
-using TerminalMatrix.Events;
 
 namespace TerminalMatrix;
 
 internal class TerminalMatrixKeypressHandler
 {
     private readonly TerminalMatrixControl _owner;
-    private readonly int[,] _characterMap;
 
-    internal TerminalMatrixKeypressHandler(TerminalMatrixControl owner, int[,] characterMap)
+    internal TerminalMatrixKeypressHandler(TerminalMatrixControl owner)
     {
         _owner = owner;
-        _characterMap = characterMap;
     }
 
-    internal void HandleKeyDown(KeyEventArgs e, bool inputMode, Action<char> typeCharacter)
+    internal void HandleKeyDown(KeyEventArgs e, bool inputMode, Action<char> typeCharacter, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
     {
         switch (e.KeyCode)
         {
@@ -45,48 +42,48 @@ internal class TerminalMatrixKeypressHandler
             case Keys.Home:
                 break;
             case Keys.Left:
-                if (CursorPosition.X > 0)
+                if (cursorPosition.X > 0)
                 {
-                    CursorPosition.X--;
-                    ShowKeyboardActivity();
+                    cursorPosition.X--;
+                    showKeyboardActivity();
                 }
-                else if (CursorPosition.Y > 0)
+                else if (cursorPosition.Y > 0)
                 {
-                    CursorPosition.X = CharacterMatrixDefinition.Width - 1;
-                    CursorPosition.Y--;
-                    ShowKeyboardActivity();
+                    cursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                    cursorPosition.Y--;
+                    showKeyboardActivity();
                 }
                 break;
             case Keys.Up:
-                if (CursorPosition.Y > 0)
+                if (cursorPosition.Y > 0)
                 {
-                    CursorPosition.Y--;
-                    ShowKeyboardActivity();
+                    cursorPosition.Y--;
+                    showKeyboardActivity();
                 }
                 break;
             case Keys.Right:
-                if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
+                if (cursorPosition.X < CharacterMatrixDefinition.Width - 1)
                 {
-                    CursorPosition.X++;
-                    ShowKeyboardActivity();
+                    cursorPosition.X++;
+                    showKeyboardActivity();
                 }
-                else if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                else if (cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
                 {
-                    CursorPosition.X = 0;
-                    CursorPosition.Y++;
-                    ShowKeyboardActivity();
+                    cursorPosition.X = 0;
+                    cursorPosition.Y++;
+                    showKeyboardActivity();
                 }
                 break;
             case Keys.Down:
-                if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                if (cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
                 {
-                    CursorPosition.Y++;
-                    ShowKeyboardActivity();
+                    cursorPosition.Y++;
+                    showKeyboardActivity();
                 }
                 else
                 {
-                    Scroll();
-                    ShowKeyboardActivity();
+                    scroll();
+                    showKeyboardActivity();
                 }
                 break;
             case Keys.Insert:
@@ -221,7 +218,7 @@ internal class TerminalMatrixKeypressHandler
                 break;
             case Keys.Subtract:
             case Keys.OemMinus:
-                TypeCharacter('-');
+                typeCharacter('-');
                 break;
             case Keys.Decimal:
                 break;

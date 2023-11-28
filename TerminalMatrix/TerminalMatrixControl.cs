@@ -41,7 +41,7 @@ public partial class TerminalMatrixControl : UserControl
         _codePage = new TerminalCodePage();
         _palette = new Palette();
         TerminalState = new TerminalState();
-        _keypressHandler = new TerminalMatrixKeypressHandler(_characterMap);
+        _keypressHandler = new TerminalMatrixKeypressHandler(this);
         CurrentCursorColor = (int)ColorName.Green;
         _timer.Interval = 1000;
         InitializeComponent();
@@ -303,7 +303,7 @@ public partial class TerminalMatrixControl : UserControl
 #if DEBUG
         System.Diagnostics.Debug.WriteLine($@"Keypress: {e.KeyCode} ({e.KeyValue})");
 #endif
-        _keypressHandler.HandleKeyDown(e, TerminalState.InputMode);
+        _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
         base.OnKeyDown(e);
     }
 

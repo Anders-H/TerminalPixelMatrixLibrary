@@ -249,9 +249,9 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['X'], new CharacterPixelMatrix(
             @",**,,**," +
             @",**,,**," +
-            @",**,**,," +
-            @",****,,," +
-            @",**,**,," +
+            @",,****,," +
+            @",,,**,,," +
+            @",,****,," +
             @",**,,**," +
             @",**,,**," +
             @",,,,,,,,"
@@ -259,11 +259,11 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['Y'], new CharacterPixelMatrix(
             @",**,,**," +
             @",**,,**," +
-            @",**,**,," +
-            @",****,,," +
-            @",**,**,," +
             @",**,,**," +
-            @",**,,**," +
+            @",,****,," +
+            @",,,**,,," +
+            @",,,**,,," +
+            @",,,**,,," +
             @",,,,,,,,"
         ));
         Add(tcp.Asc['Z'], new CharacterPixelMatrix(

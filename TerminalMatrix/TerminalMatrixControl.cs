@@ -309,24 +309,20 @@ public partial class TerminalMatrixControl : UserControl
 
     internal void HandleEnter()
     {
-        TypedLineEventArgs? eventArgs;
+        var inputValue = new InputFinder(_characterMap, InputStart)
+            .GetInput(CursorPosition, out var inputStart);
 
+        var eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
+        
         if (TerminalState.InputMode)
         {
-            var inputValue = new InputFinder(_characterMap, InputStart)
-                .GetInput(CursorPosition, out var inputStart);
-
-            eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
             InputCompleted?.Invoke(this, eventArgs);
         }
         else
         {
-            var inputValue = new InputFinder(_characterMap, InputStart)
-                .GetInput(CursorPosition, out var inputStart);
-
-            eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
             TypedLine?.Invoke(this, eventArgs);
         }
+
 
         if (!eventArgs.CancelNewLine)
         {

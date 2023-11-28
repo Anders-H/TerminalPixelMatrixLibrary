@@ -114,7 +114,23 @@ public class Coordinate
     }
 
     public bool CanMoveDown() =>
-    Y < CharacterMatrixDefinition.Height - 1;
+        Y < CharacterMatrixDefinition.Height - 1;
+
+    public bool AtEnd()
+    {
+        if (Y < CharacterMatrixDefinition.Height - 1)
+            return false;
+
+        return X >= CharacterMatrixDefinition.Width - 1;
+    }
+
+    public bool AtEnd(CoordinateList earlyStop)
+    {
+        if (Y < CharacterMatrixDefinition.Height - 1)
+            return false;
+
+        return X >= CharacterMatrixDefinition.Width - 1;
+    }
 
     public override string ToString() =>
         $"({X}, {Y})";

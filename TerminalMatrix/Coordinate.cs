@@ -116,6 +116,7 @@ public class Coordinate
     public bool CanMoveDown() =>
         Y < CharacterMatrixDefinition.Height - 1;
 
+
     public bool AtEnd()
     {
         if (Y < CharacterMatrixDefinition.Height - 1)

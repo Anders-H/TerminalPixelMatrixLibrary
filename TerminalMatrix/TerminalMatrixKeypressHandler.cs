@@ -93,24 +93,34 @@ internal class TerminalMatrixKeypressHandler
             case Keys.Help:
                 break;
             case Keys.D0:
+                typeCharacter('0');
                 break;
             case Keys.D1:
+                typeCharacter('1');
                 break;
             case Keys.D2:
+                typeCharacter('2');
                 break;
             case Keys.D3:
+                typeCharacter('3');
                 break;
             case Keys.D4:
+                typeCharacter('4');
                 break;
             case Keys.D5:
+                typeCharacter('5');
                 break;
             case Keys.D6:
+                typeCharacter('6');
                 break;
             case Keys.D7:
+                typeCharacter('7');
                 break;
             case Keys.D8:
+                typeCharacter('8');
                 break;
             case Keys.D9:
+                typeCharacter('9');
                 break;
             case Keys.A:
                 typeCharacter('A');

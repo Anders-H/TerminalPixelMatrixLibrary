@@ -298,11 +298,14 @@ public partial class TerminalMatrixControl : UserControl
         base.OnPreviewKeyDown(e);
     }
 
+    protected override void OnKeyPress(KeyPressEventArgs e)
+    {
+        _keypressHandler.HandleKeyPress(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
+        base.OnKeyPress(e);
+    }
+
     protected override void OnKeyDown(KeyEventArgs e)
     {
-#if DEBUG
-        System.Diagnostics.Debug.WriteLine($@"Keypress: {e.KeyCode} ({e.KeyValue})");
-#endif
         _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
         base.OnKeyDown(e);
     }

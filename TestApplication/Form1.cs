@@ -11,8 +11,8 @@ public partial class Form1 : Form
 
     private void Form1_Load(object sender, EventArgs e)
     {
-        terminalMatrixControl1.SetStartPosition(5, 5);
-        terminalMatrixControl1.UpdateBitmap();
+        //terminalMatrixControl1.SetStartPosition(5, 5);
+        //terminalMatrixControl1.UpdateBitmap();
     }
 
     private void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)

@@ -266,6 +266,7 @@ public partial class TerminalMatrixControl : UserControl
     {
         _characterMap[CursorPosition.X, CursorPosition.Y] = c;
         _characterColorMap[CursorPosition.X, CursorPosition.Y] = CurrentCursorColor;
+        InputStart.PushAt(CursorPosition);
 
         if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
         {

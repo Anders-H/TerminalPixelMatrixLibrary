@@ -16,4 +16,42 @@ public class CoordinateList : List<Coordinate>
 
     public bool HitTest(Coordinate c) =>
         this.Any(coordinate => coordinate.IsSame(c));
+
+    public Coordinate? GetAt(Coordinate c) =>
+        this.FirstOrDefault(coordinate => coordinate.IsSame(c));
+
+    public void PushAt(Coordinate c)
+    {
+        var pushStart = GetAt(c);
+
+        if (pushStart == null)
+            return;
+
+        DeleteAllAt(pushStart);
+
+        if (pushStart.MoveNext())
+            DeleteAllAt(pushStart);
+
+        Add(pushStart.X, pushStart.Y);
+    }
+
+    private void DeleteAllAt(Coordinate c)
+    {
+        var again = false;
+
+        do
+        {
+            var x = GetAt(c);
+
+            if (x == null)
+            {
+                again = false;
+            }
+            else
+            {
+                Remove(x);
+                again = true;
+            }
+        } while (again);
+    }
 }

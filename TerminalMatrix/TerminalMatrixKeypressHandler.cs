@@ -16,15 +16,8 @@ internal class TerminalMatrixKeypressHandler
 #if DEBUG
         System.Diagnostics.Debug.WriteLine($@"HandleKeyPress: {e.KeyChar}");
 #endif
-        switch (e.KeyChar)
-        {
-            case ' ':
-            case 'A':
-            case 'B':
-            case 'C':
-                typeCharacter(e.KeyChar);
-                break;
-        }
+        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ,.;:!\"@#$%&/\\*/-+'()".IndexOf(e.KeyChar) >= 0)
+            typeCharacter(e.KeyChar);
     }
 
     internal void HandleKeyDown(KeyEventArgs e, bool inputMode, Action<char> typeCharacter, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)

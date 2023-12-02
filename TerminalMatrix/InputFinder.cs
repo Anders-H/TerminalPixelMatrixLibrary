@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace TerminalMatrix;
+﻿namespace TerminalMatrix;
 
 public class InputFinder
 {
@@ -15,43 +13,44 @@ public class InputFinder
 
     public string GetInput(Coordinate enterPressedAt, out Coordinate inputStart, out bool foundTerminator)
     {
+        var startPosition = GetStartPosition(enterPressedAt);
+        startPosition = MoveToContent(startPosition, enterPressedAt);
+
+#if DEBUG
+        System.Diagnostics.Debug.WriteLine($@"Enter pressed at {enterPressedAt.X}, {enterPressedAt.Y} and input is started at {startPosition.X}, {startPosition.Y}.");
+#endif
+
+        inputStart = Coordinate.Home();
         foundTerminator = false;
-        var result = new StringBuilder();
-        inputStart = enterPressedAt.Copy();
-
-        while (!_inputStart.HitTest(inputStart))
-        {
-            if (!inputStart.MovePrevious())
-                break;
-        }
-
-        var counter = inputStart.Copy();
-        result.Append((char)_chars[counter.X, counter.Y]);
-
-        while (counter.MoveNext())
-        {
-            if (_inputStart.HitTest(counter))
-            {
-                foundTerminator = true;
-                break;
-            }
-
-            result.Append((char)_chars[counter.X, counter.Y]);
-        }
-
-        return result.ToString().Trim();
+        return "";
     }
 
-    private Coordinate? GetNextFrom(Coordinate start)
+    private Coordinate GetStartPosition(Coordinate enterPressedAt)
     {
-        var p = start.Copy();
+        if (_inputStart.HitTest(enterPressedAt))
+            return enterPressedAt;
 
-        while (p.MoveNext())
+        var p = enterPressedAt.Copy();
+
+        do
         {
+            if (!p.MovePrevious())
+                return p;
+
             if (_inputStart.HitTest(p))
                 return p;
+
+        } while (true);
+    }
+
+    private Coordinate MoveToContent(Coordinate currentPosition, Coordinate enterPressedAt)
+    {
+        while (currentPosition < enterPressedAt && _chars[currentPosition.X, currentPosition.Y] == ' ')
+        {
+            if (!currentPosition.MoveNext())
+                break;
         }
 
-        return p.AtEnd(_inputStart) ? null : p;
+        return currentPosition;
     }
 }

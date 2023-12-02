@@ -225,7 +225,7 @@ public partial class TerminalMatrixControl : UserControl
 #if DEBUG
         foreach (var c in InputStart)
         {
-            _bitmap[c.X * 8 + c.Y * 8 * PixelMatrixDefinition.Width] = _cursorVisibleBlink ? Color.Purple.ToArgb() : Color.White.ToArgb();
+            _bitmap[c.X * 8 + c.Y * 8 * PixelMatrixDefinition.Width] = _cursorVisibleBlink ? Color.Cyan.ToArgb() : Color.White.ToArgb();
         }
 #endif
         Bitmap.UnlockBits(data);

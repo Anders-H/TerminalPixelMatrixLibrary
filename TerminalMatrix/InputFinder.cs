@@ -15,6 +15,8 @@ public class InputFinder
     {
         var startPosition = GetStartPosition(enterPressedAt);
         startPosition = MoveToContent(startPosition, enterPressedAt);
+        var endPosition = GetEndPosition(enterPressedAt);
+        endPosition = MoveToEndContent(endPosition, enterPressedAt);
 
 #if DEBUG
         System.Diagnostics.Debug.WriteLine($@"Enter pressed at {enterPressedAt.X}, {enterPressedAt.Y} and input is started at {startPosition.X}, {startPosition.Y}.");
@@ -41,6 +43,11 @@ public class InputFinder
                 return p;
 
         } while (true);
+    }
+
+    private Coordinate GetEndPosition(Coordinate enterPressedAt)
+    {
+
     }
 
     private Coordinate MoveToContent(Coordinate currentPosition, Coordinate enterPressedAt)

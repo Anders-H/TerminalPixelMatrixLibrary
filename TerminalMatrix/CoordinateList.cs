@@ -37,7 +37,7 @@ public class CoordinateList : List<Coordinate>
 
     private void DeleteAllAt(Coordinate c)
     {
-        var again = false;
+        bool again;
 
         do
         {

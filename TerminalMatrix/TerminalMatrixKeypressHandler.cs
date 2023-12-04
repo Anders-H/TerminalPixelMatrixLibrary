@@ -13,10 +13,7 @@ internal class TerminalMatrixKeypressHandler
 
     internal void HandleKeyPress(KeyPressEventArgs e, bool inputMode, Action<char> typeCharacter, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
     {
-#if DEBUG
-        System.Diagnostics.Debug.WriteLine($@"HandleKeyPress: {e.KeyChar}");
-#endif
-        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ,.;:!\"@#$%&/\\*/-+'()".IndexOf(e.KeyChar) >= 0)
+        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,.;:!\"@#$%&/\\*/-+'()".IndexOf(e.KeyChar) >= 0)
             typeCharacter(e.KeyChar);
     }
 

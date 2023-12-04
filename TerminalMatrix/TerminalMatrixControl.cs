@@ -314,9 +314,9 @@ public partial class TerminalMatrixControl : UserControl
     internal void HandleEnter()
     {
         var inputValue = new InputFinder(_characterMap, InputStart)
-            .GetInput(CursorPosition, out var inputStart, out var foundTerminator);
+            .GetInput(CursorPosition, out var inputStart, out var inputEnd, out var foundTerminator);
 
-        var eventArgs = new TypedLineEventArgs(inputStart, CursorPosition, inputValue);
+        var eventArgs = new TypedLineEventArgs(inputStart, inputEnd, inputValue);
         
         if (TerminalState.InputMode)
         {

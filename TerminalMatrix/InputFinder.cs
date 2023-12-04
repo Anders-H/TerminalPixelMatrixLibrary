@@ -11,18 +11,15 @@ public class InputFinder
         _inputStart = inputStart;
     }
 
-    public string GetInput(Coordinate enterPressedAt, out Coordinate inputStart, out bool foundTerminator)
+    public string GetInput(Coordinate enterPressedAt, out Coordinate inputStart, out Coordinate inputEnd, out bool foundTerminator)
     {
         var startPosition = GetStartPosition(enterPressedAt);
         startPosition = MoveToContent(startPosition, enterPressedAt);
         var endPosition = GetEndPosition(enterPressedAt);
         endPosition = MoveToEndContent(endPosition, enterPressedAt);
 
-#if DEBUG
-        System.Diagnostics.Debug.WriteLine($@"Enter pressed at {enterPressedAt.X}, {enterPressedAt.Y} and input is started at {startPosition.X}, {startPosition.Y}.");
-#endif
-
-        inputStart = Coordinate.Home();
+        inputStart = startPosition;
+        inputEnd = endPosition;
         foundTerminator = false;
         return "";
     }
@@ -47,7 +44,20 @@ public class InputFinder
 
     private Coordinate GetEndPosition(Coordinate enterPressedAt)
     {
+        if (_inputStart.HitTest(enterPressedAt))
+            return enterPressedAt;
 
+        var p = enterPressedAt.Copy();
+
+        do
+        {
+            if (!p.MoveNext())
+                return p;
+
+            if (_inputStart.HitTest(p))
+                return p;
+
+        } while (true);
     }
 
     private Coordinate MoveToContent(Coordinate currentPosition, Coordinate enterPressedAt)
@@ -55,6 +65,17 @@ public class InputFinder
         while (currentPosition < enterPressedAt && _chars[currentPosition.X, currentPosition.Y] == ' ')
         {
             if (!currentPosition.MoveNext())
+                break;
+        }
+
+        return currentPosition;
+    }
+
+    private Coordinate MoveToEndContent(Coordinate currentPosition, Coordinate enterPressedAt)
+    {
+        while (currentPosition >= enterPressedAt && _chars[currentPosition.X, currentPosition.Y] == ' ')
+        {
+            if (!currentPosition.MovePrevious())
                 break;
         }
 

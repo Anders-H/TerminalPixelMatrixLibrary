@@ -116,6 +116,40 @@ public class Coordinate
         return a.X < b.X;
     }
 
+    public static bool operator >=(Coordinate? a, Coordinate? b)
+    {
+        if (a == null || b == null)
+            return false;
+
+        if (a.IsSame(b))
+            return true;
+
+        if (a.Y > b.Y)
+            return true;
+
+        if (a.Y < b.Y)
+            return false;
+
+        return a.X > b.X;
+    }
+
+    public static bool operator <=(Coordinate? a, Coordinate? b)
+    {
+        if (a == null || b == null)
+            return false;
+
+        if (a.IsSame(b))
+            return true;
+
+        if (a.Y < b.Y)
+            return true;
+
+        if (a.Y > b.Y)
+            return false;
+
+        return a.X < b.X;
+    }
+
     public bool CanMoveDown() =>
         Y < CharacterMatrixDefinition.Height - 1;
 

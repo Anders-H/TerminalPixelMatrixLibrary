@@ -9,15 +9,9 @@ public partial class Form1 : Form
         InitializeComponent();
     }
 
-    private void Form1_Load(object sender, EventArgs e)
-    {
-        //terminalMatrixControl1.SetStartPosition(5, 5);
-        //terminalMatrixControl1.UpdateBitmap();
-    }
-
     private void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
     {
-        Text = $@"{DateTime.Now.ToShortTimeString()} ({e.InputStart.X}, {e.InputStart.Y})-({e.InputEnd.X}, {e.InputEnd.Y})  ""{e.InputValue}""";
+        Text = $@"{DateTime.Now.ToShortTimeString()} ""{e.InputValue}""";
 
         if (e.InputValue == "IA")
         {
@@ -27,9 +21,26 @@ public partial class Form1 : Form
             terminalMatrixControl1.VerticalLine(40, ColorName.Green);
             terminalMatrixControl1.VerticalLine(41, 10, 190, ColorName.White);
             terminalMatrixControl1.Box(ColorName.LightBlue, 43, 43, 63, 63);
-            terminalMatrixControl1.PrintAt(ColorName.LightGreen, 20, 10, "ABAB BA");
+            terminalMatrixControl1.PrintAt(ColorName.LightGreen, 20, 10, "ABAB BA abc");
             terminalMatrixControl1.SetStartPosition(20, 10);
             terminalMatrixControl1.UpdateBitmap();
         }
+        else if (e.InputValue == "INPUT")
+        {
+            terminalMatrixControl1.BeginInput();
+        }
+        else if (e.InputValue == "LIST")
+        {
+            terminalMatrixControl1.List();
+        }
+        else if (e.InputValue == "NEW")
+        {
+            terminalMatrixControl1.New();
+        }
+    }
+
+    private void terminalMatrixControl1_InputCompleted(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
+    {
+        Text = $@"INPUT COMPLETED {DateTime.Now.ToShortTimeString()} ""{e.InputValue}""";
     }
 }

@@ -40,6 +40,7 @@
             terminalMatrixControl1.Size = new Size(1054, 691);
             terminalMatrixControl1.TabIndex = 0;
             terminalMatrixControl1.TypedLine += terminalMatrixControl1_TypedLine;
+            terminalMatrixControl1.InputCompleted += terminalMatrixControl1_InputCompleted;
             // 
             // Form1
             // 
@@ -50,7 +51,6 @@
             DoubleBuffered = true;
             Name = "Form1";
             Text = "Form1";
-            Load += Form1_Load;
             ResumeLayout(false);
         }
 

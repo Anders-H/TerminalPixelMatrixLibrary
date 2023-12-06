@@ -1,6 +1,7 @@
 ﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Text;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.Events;
 using TerminalMatrix.TerminalColor;
@@ -26,13 +27,12 @@ public partial class TerminalMatrixControl : UserControl
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
-    public CoordinateList InputStart { get; }
     public int CurrentCursorColor { get; set; }
+
 
     public TerminalMatrixControl()
     {
         CursorPosition = new Coordinate(0, 0);
-        InputStart = new CoordinateList(0, 0);
         _characterColorMap = CharacterMatrixDefinition.Create();
         _characterMap = CharacterMatrixDefinition.Create();
         _pixelMap = PixelMatrixDefinition.Create();
@@ -58,8 +58,6 @@ public partial class TerminalMatrixControl : UserControl
     public void SetStartPosition(int x, int y)
     {
         CursorPosition.Set(x, y);
-        InputStart.Clear();
-        InputStart.Add(x, y);
     }
 
     private void Blink(object? sender, EventArgs e)
@@ -222,12 +220,6 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
-#if DEBUG
-        foreach (var c in InputStart)
-        {
-            _bitmap[c.X * 8 + c.Y * 8 * PixelMatrixDefinition.Width] = _cursorVisibleBlink ? Color.Cyan.ToArgb() : Color.White.ToArgb();
-        }
-#endif
         Bitmap.UnlockBits(data);
         bitsHandle.Free();
 
@@ -266,7 +258,6 @@ public partial class TerminalMatrixControl : UserControl
     {
         _characterMap[CursorPosition.X, CursorPosition.Y] = c;
         _characterColorMap[CursorPosition.X, CursorPosition.Y] = CurrentCursorColor;
-        InputStart.PushAt(CursorPosition);
 
         if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
         {
@@ -313,33 +304,37 @@ public partial class TerminalMatrixControl : UserControl
 
     internal void HandleEnter()
     {
-        var inputValue = new InputFinder(_characterMap, InputStart)
-            .GetInput(CursorPosition, out var inputStart, out var inputEnd, out var foundTerminator);
+        var inputValue = new StringBuilder();
 
-        var eventArgs = new TypedLineEventArgs(inputStart, inputEnd, inputValue);
-        
-        if (TerminalState.InputMode)
+        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+            inputValue.Append(_codePage.Chr[_characterMap[x, CursorPosition.Y]]);
+
+        var v = inputValue.ToString().Trim();
+
+        if (!AddProgramLine())
         {
-            InputCompleted?.Invoke(this, eventArgs);
-        }
-        else
-        {
-            TypedLine?.Invoke(this, eventArgs);
-        }
+            var eventArgs = new TypedLineEventArgs(v);
 
-
-        if (!eventArgs.CancelNewLine)
-        {
-            CursorPosition.X = 0;
-
-            if (CursorPosition.CanMoveDown())
-                CursorPosition.Y++;
+            if (TerminalState.InputMode)
+            {
+                TerminalState.InputMode = false;
+                InputCompleted?.Invoke(this, eventArgs);
+            }
             else
-                Scroll();
-        }
+            {
+                TypedLine?.Invoke(this, eventArgs);
+            }
 
-        if (!foundTerminator)
-            InputStart.Add(CursorPosition.Copy());
+            if (!eventArgs.CancelNewLine)
+            {
+                CursorPosition.X = 0;
+
+                if (CursorPosition.CanMoveDown())
+                    CursorPosition.Y++;
+                else
+                    Scroll();
+            }
+        }
 
         _timer.Enabled = false;
         _cursorVisibleBlink = true;
@@ -347,27 +342,15 @@ public partial class TerminalMatrixControl : UserControl
         _timer.Enabled = true;
     }
 
+    private bool AddProgramLine()
+    {
+        return false;
+    }
+
     private new void Scroll()
     {
         ScrollCharacterMap(_characterColorMap, 0);
         ScrollCharacterMap(_characterMap, ' ');
-
-        foreach (var c in InputStart)
-        {
-            c.Scroll();
-        }
-
-        var again = false;
-
-        do
-        {
-            foreach (var c in InputStart.Where(c => c.Y < 0))
-            {
-                InputStart.Remove(c);
-                again = true;
-                break;
-            }
-        } while (again);
     }
 
     private void ScrollCharacterMap(int[,] characterMap, int blank)

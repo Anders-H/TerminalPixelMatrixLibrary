@@ -22,11 +22,15 @@ internal class TerminalMatrixKeypressHandler
 #if DEBUG
         System.Diagnostics.Debug.WriteLine($@"HandleKeyDown: {e.KeyData} ({e.KeyValue})");
 #endif
+
+        if (e.KeyCode == Keys.Enter)
+        {
+            _owner.HandleEnter((e.Modifiers & Keys.Shift) != 0);
+            return;
+        }
+
         switch (e.KeyData)
         {
-            case Keys.Return: // ...and Enter
-            _owner.HandleEnter();
-            break;
             case Keys.Left:
                 if (cursorPosition.X > 0)
                 {

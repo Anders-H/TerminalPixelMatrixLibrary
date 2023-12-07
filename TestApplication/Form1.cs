@@ -27,14 +27,17 @@ public partial class Form1 : Form
         }
         else if (e.InputValue == "INPUT")
         {
+            System.Diagnostics.Debug.WriteLine("Starting input.");
             terminalMatrixControl1.BeginInput();
         }
         else if (e.InputValue == "LIST")
         {
+            System.Diagnostics.Debug.WriteLine("Call list.");
             terminalMatrixControl1.List();
         }
         else if (e.InputValue == "NEW")
         {
+            System.Diagnostics.Debug.WriteLine("Call new.");
             terminalMatrixControl1.New();
         }
     }

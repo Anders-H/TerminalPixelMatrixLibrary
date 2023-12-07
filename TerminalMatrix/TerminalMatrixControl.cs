@@ -264,12 +264,13 @@ public partial class TerminalMatrixControl : UserControl
             CursorPosition.X++;
             ShowKeyboardActivity();
         }
-        else if (!TerminalState.InputMode && CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
-        {
-            CursorPosition.X = 0;
-            CursorPosition.Y++;
-            ShowKeyboardActivity();
-        }
+        // Needed for multiline support, not supported now.
+        //else if (!TerminalState.InputMode && CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+        //{
+        //    CursorPosition.X = 0;
+        //    CursorPosition.Y++;
+        //    ShowKeyboardActivity();
+        //}
 
         ShowKeyboardActivity();
     }
@@ -302,7 +303,7 @@ public partial class TerminalMatrixControl : UserControl
         base.OnKeyDown(e);
     }
 
-    internal void HandleEnter()
+    internal void HandleEnter(bool shift)
     {
         var inputValue = new StringBuilder();
 
@@ -310,30 +311,29 @@ public partial class TerminalMatrixControl : UserControl
             inputValue.Append(_codePage.Chr[_characterMap[x, CursorPosition.Y]]);
 
         var v = inputValue.ToString().Trim();
+        AddProgramLine(shift);
 
-        if (!AddProgramLine())
+        var eventArgs = new TypedLineEventArgs(v);
+
+        if (TerminalState.InputMode)
         {
-            var eventArgs = new TypedLineEventArgs(v);
-
-            if (TerminalState.InputMode)
-            {
-                TerminalState.InputMode = false;
-                InputCompleted?.Invoke(this, eventArgs);
-            }
-            else
-            {
+            TerminalState.InputMode = false;
+            InputCompleted?.Invoke(this, eventArgs);
+        }
+        else
+        {
+            if (!shift)
                 TypedLine?.Invoke(this, eventArgs);
-            }
+        }
 
-            if (!eventArgs.CancelNewLine)
-            {
-                CursorPosition.X = 0;
+        if (!eventArgs.CancelNewLine)
+        {
+            CursorPosition.X = 0;
 
-                if (CursorPosition.CanMoveDown())
-                    CursorPosition.Y++;
-                else
-                    Scroll();
-            }
+            if (CursorPosition.CanMoveDown())
+                CursorPosition.Y++;
+            else
+                Scroll();
         }
 
         _timer.Enabled = false;
@@ -342,9 +342,10 @@ public partial class TerminalMatrixControl : UserControl
         _timer.Enabled = true;
     }
 
-    private bool AddProgramLine()
+    private void AddProgramLine(bool shift)
     {
-        return false;
+        if (shift || TerminalState.InputMode)
+            return;
     }
 
     private new void Scroll()
@@ -363,5 +364,20 @@ public partial class TerminalMatrixControl : UserControl
 
         for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             characterMap[x, last] = blank;
+    }
+
+    public void BeginInput()
+    {
+        TerminalState.InputMode = true;
+    }
+
+    public void List()
+    {
+
+    }
+
+    public void New()
+    {
+
     }
 }

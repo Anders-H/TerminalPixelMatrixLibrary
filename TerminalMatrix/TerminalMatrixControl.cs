@@ -299,7 +299,21 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
+        switch (e.KeyData)
+        {
+            case Keys.PageUp:
+                break;
+            case Keys.PageDown:
+                break;
+            case Keys.Home:
+                break;
+            case Keys.End:
+                break;
+            default:
+                _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
+                break;
+        }
+
         base.OnKeyDown(e);
     }
 
@@ -311,22 +325,31 @@ public partial class TerminalMatrixControl : UserControl
             inputValue.Append(_codePage.Chr[_characterMap[x, CursorPosition.Y]]);
 
         var v = inputValue.ToString().Trim();
-        AddProgramLine(shift);
-
-        var eventArgs = new TypedLineEventArgs(v);
-
-        if (TerminalState.InputMode)
+       
+        if (AddProgramLine(shift))
         {
-            TerminalState.InputMode = false;
-            InputCompleted?.Invoke(this, eventArgs);
+            NextLine();
         }
         else
         {
-            if (!shift)
-                TypedLine?.Invoke(this, eventArgs);
+            var eventArgs = new TypedLineEventArgs(v);
+
+            if (TerminalState.InputMode)
+            {
+                TerminalState.InputMode = false;
+                InputCompleted?.Invoke(this, eventArgs);
+            }
+            else
+            {
+                if (!shift)
+                    TypedLine?.Invoke(this, eventArgs);
+            }
+
+            if (!eventArgs.CancelNewLine)
+                NextLine();
         }
 
-        if (!eventArgs.CancelNewLine)
+        void NextLine()
         {
             CursorPosition.X = 0;
 
@@ -342,10 +365,12 @@ public partial class TerminalMatrixControl : UserControl
         _timer.Enabled = true;
     }
 
-    private void AddProgramLine(bool shift)
+    private bool AddProgramLine(bool shift)
     {
         if (shift || TerminalState.InputMode)
-            return;
+            return false;
+
+        return false; // TODO
     }
 
     private new void Scroll()

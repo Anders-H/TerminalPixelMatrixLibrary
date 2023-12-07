@@ -13,16 +13,12 @@ internal class TerminalMatrixKeypressHandler
 
     internal void HandleKeyPress(KeyPressEventArgs e, bool inputMode, Action<char> typeCharacter, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
     {
-        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,.;:!\"@#$%&/\\*/-+'()".IndexOf(e.KeyChar) >= 0)
+        if (TerminalCodePage.Characters.IndexOf(e.KeyChar) >= 0)
             typeCharacter(e.KeyChar);
     }
 
     internal void HandleKeyDown(KeyEventArgs e, bool inputMode, Action<char> typeCharacter, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
     {
-#if DEBUG
-        System.Diagnostics.Debug.WriteLine($@"HandleKeyDown: {e.KeyData} ({e.KeyValue})");
-#endif
-
         if (e.KeyCode == Keys.Enter)
         {
             _owner.HandleEnter((e.Modifiers & Keys.Shift) != 0);

@@ -15,7 +15,6 @@ public partial class Form1 : Form
 
         if (e.InputValue == "IA")
         {
-            e.CancelNewLine = true;
             terminalMatrixControl1.HorizontalLine(40, ColorName.Cyan);
             terminalMatrixControl1.HorizontalLine(10, 41, 630, ColorName.DarkGrey);
             terminalMatrixControl1.VerticalLine(40, ColorName.Green);
@@ -28,7 +27,7 @@ public partial class Form1 : Form
         else if (e.InputValue == "INPUT")
         {
             System.Diagnostics.Debug.WriteLine("Starting input.");
-            terminalMatrixControl1.BeginInput();
+            terminalMatrixControl1.BeginInput("Hello? ");
         }
         else if (e.InputValue == "LIST")
         {

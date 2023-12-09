@@ -3,13 +3,13 @@
 public class ProgramLine
 {
     public string RawString { get; }
-    public int RowNumber { get; }
+    public int LineNumber { get; }
     public string Code { get; }
 
-    public ProgramLine(string rawString, int rowNumber, string code)
+    public ProgramLine(string rawString, int lineNumber, string code)
     {
         RawString = rawString;
-        RowNumber = rowNumber;
+        LineNumber = lineNumber;
         Code = code;
     }
 }

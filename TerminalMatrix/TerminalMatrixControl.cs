@@ -1,7 +1,9 @@
 ﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.Events;
 using TerminalMatrix.TerminalColor;
@@ -28,7 +30,7 @@ public partial class TerminalMatrixControl : UserControl
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
     public int CurrentCursorColor { get; set; }
-
+    public ProgramLineDictionary ProgramLines { get; }
 
     public TerminalMatrixControl()
     {
@@ -44,6 +46,7 @@ public partial class TerminalMatrixControl : UserControl
         _keypressHandler = new TerminalMatrixKeypressHandler(this);
         CurrentCursorColor = (int)ColorName.Green;
         _timer.Interval = 1000;
+        ProgramLines = new ProgramLineDictionary();
         InitializeComponent();
     }
 
@@ -302,12 +305,30 @@ public partial class TerminalMatrixControl : UserControl
         switch (e.KeyData)
         {
             case Keys.PageUp:
+                if (TerminalState.InputMode)
+                    return;
+
+                CursorPosition.Y = 0;
+                ShowEffect();
                 break;
             case Keys.PageDown:
+                if (TerminalState.InputMode)
+                    return;
+
+                CursorPosition.Y = CharacterMatrixDefinition.Height - 1;
+                ShowEffect();
                 break;
             case Keys.Home:
+                CursorPosition.X = TerminalState.InputMode ? TerminalState.InputStartX : 0;
+                ShowEffect();
                 break;
             case Keys.End:
+                CursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                ShowEffect();
+                break;
+            case Keys.Insert:
+                break;
+            case Keys.Delete:
                 break;
             default:
                 _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
@@ -315,10 +336,20 @@ public partial class TerminalMatrixControl : UserControl
         }
 
         base.OnKeyDown(e);
+
+        void ShowEffect()
+        {
+            _timer.Enabled = false;
+            _cursorVisibleBlink = true;
+            ShowKeyboardActivity();
+            _timer.Enabled = true;
+        }
     }
 
     internal void HandleEnter(bool shift)
     {
+        TypedLineEventArgs? eventArgs = null;
+        var fireEventTypedLine = false;
         var inputValue = new StringBuilder();
 
         for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
@@ -326,13 +357,13 @@ public partial class TerminalMatrixControl : UserControl
 
         var v = inputValue.ToString().Trim();
        
-        if (AddProgramLine(shift))
+        if (AddProgramLine(v, shift))
         {
             NextLine();
         }
         else
         {
-            var eventArgs = new TypedLineEventArgs(v);
+            eventArgs = new TypedLineEventArgs(v);
 
             if (TerminalState.InputMode)
             {
@@ -342,11 +373,10 @@ public partial class TerminalMatrixControl : UserControl
             else
             {
                 if (!shift)
-                    TypedLine?.Invoke(this, eventArgs);
+                    fireEventTypedLine = true;
             }
 
-            if (!eventArgs.CancelNewLine)
-                NextLine();
+            NextLine();
         }
 
         void NextLine()
@@ -363,14 +393,41 @@ public partial class TerminalMatrixControl : UserControl
         _cursorVisibleBlink = true;
         ShowKeyboardActivity();
         _timer.Enabled = true;
+
+        if (fireEventTypedLine)
+            TypedLine?.Invoke(this, eventArgs!);
     }
 
-    private bool AddProgramLine(bool shift)
+    private bool AddProgramLine(string value, bool shift)
     {
         if (shift || TerminalState.InputMode)
             return false;
 
-        return false; // TODO
+        var match = Regex.Match(value, @"^([0-9]+)\s(.*)$");
+
+        if (match.Success)
+        {
+
+            if (!int.TryParse(match.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var lineNumber))
+                return false;
+
+            var line = new ProgramLine(value, lineNumber, match.Groups[2].Value.Trim());
+            ProgramLines.InsertProgramLine(line);
+            return true;
+        }
+
+        match = Regex.Match(value, @"^([0-9]+)$");
+
+        if (match.Success)
+        {
+            if (!int.TryParse(match.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var lineNumber))
+                return false;
+
+            ProgramLines.RemoveProgramLine(lineNumber);
+            return true;
+        }
+
+        return false;
     }
 
     private new void Scroll()
@@ -391,18 +448,41 @@ public partial class TerminalMatrixControl : UserControl
             characterMap[x, last] = blank;
     }
 
-    public void BeginInput()
+    public void BeginInput(string prompt)
     {
         TerminalState.InputMode = true;
     }
 
     public void List()
     {
+        foreach (var programLine in ProgramLines)
+            WriteLine(programLine.Value.RawString);
+    }
 
+    private void WriteLine(string text)
+    {
+        var y = CursorPosition.Y;
+
+        for (var x = 0; x < text.Length; x++)
+        {
+            if (x >= CharacterMatrixDefinition.Width)
+                break;
+            _characterMap[x, y] = text[x];
+        }
+
+        CursorPosition.X = 0;
+
+        if (CursorPosition.CanMoveDown())
+            CursorPosition.Y++;
+        else
+            Scroll();
+
+        UpdateBitmap();
+        Invalidate();
     }
 
     public void New()
     {
-
+        ProgramLines.Clear();
     }
 }

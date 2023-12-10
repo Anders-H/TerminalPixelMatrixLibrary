@@ -638,12 +638,12 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['q'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,,"
+            @",,*****," +
+            @",**,,**," +
+            @",**,,**," +
+            @",,*****," +
+            @",,,,,**," +
+            @",,,,,**,"
         ));
         Add(tcp.Asc['R'], new CharacterPixelMatrix(
             @",*****,," +
@@ -658,11 +658,11 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['r'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
+            @",*****,," +
+            @",**,,**," +
+            @",**,,,,," +
+            @",**,,,,," +
+            @",**,,,,," +
             @",,,,,,,,"
         ));
         Add(tcp.Asc['S'], new CharacterPixelMatrix(
@@ -678,11 +678,11 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['s'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
+            @",,****,," +
+            @",**,,,,," +
+            @",,****,," +
+            @",,,,,**," +
+            @",,****,," +
             @",,,,,,,,"
         ));
         Add(tcp.Asc['T'], new CharacterPixelMatrix(
@@ -696,14 +696,14 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
             @",,,,,,,,"
         ));
         Add(tcp.Asc['t'], new CharacterPixelMatrix(
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,,"
+            @",,**,,,," +
+            @",,**,,,," +
+            @",*****,," +
+            @",,**,,,," +
+            @",,**,,,," +
+            @",,**,,,," +
+            @",,,****," +
+            @",,,,,,,,,"
         ));
         Add(tcp.Asc['U'], new CharacterPixelMatrix(
             @",**,,**," +
@@ -718,11 +718,11 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['u'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
+            @",**,,**," +
+            @",**,,**," +
+            @",**,,**," +
+            @",**,,**," +
+            @",,****,," +
             @",,,,,,,,"
         ));
         Add(tcp.Asc['V'], new CharacterPixelMatrix(
@@ -738,11 +738,11 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['v'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
+            @",**,,**," +
+            @",**,,**," +
+            @",**,,**," +
+            @",,****,," +
+            @",,,**,,," +
             @",,,,,,,,"
         ));
         Add(tcp.Asc['W'], new CharacterPixelMatrix(
@@ -758,12 +758,12 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['w'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,,"
+            @",**,,,**" +
+            @",**,*,**" +
+            @",*******" +
+            @",***,***" +
+            @",**,,,**" +
+            @",,,,,,,,,"
         ));
         Add(tcp.Asc['X'], new CharacterPixelMatrix(
             @",**,,**," +
@@ -778,11 +778,11 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['x'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
+            @",**,,**," +
+            @",,****,," +
+            @",,,**,,," +
+            @",,****,," +
+            @",**,,**," +
             @",,,,,,,,"
         ));
         Add(tcp.Asc['Y'], new CharacterPixelMatrix(
@@ -798,12 +798,12 @@ public class TerminalFont : Dictionary<int, CharacterPixelMatrix>
         Add(tcp.Asc['y'], new CharacterPixelMatrix(
             @",,,,,,,," +
             @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,," +
-            @",,,,,,,,"
+            @",**,,**," +
+            @",**,,**," +
+            @",**,,**," +
+            @",,*****," +
+            @",,,,,**," +
+            @",,****,,"
         ));
         Add(tcp.Asc['Z'], new CharacterPixelMatrix(
             @",******," +

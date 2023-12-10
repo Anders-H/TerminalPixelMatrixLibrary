@@ -44,7 +44,7 @@ public partial class TerminalMatrixControl : UserControl
         _palette = new Palette();
         TerminalState = new TerminalState();
         _keypressHandler = new TerminalMatrixKeypressHandler(this);
-        CurrentCursorColor = (int)ColorName.Green;
+        CurrentCursorColor = (int)ColorName.White;
         _timer.Interval = 1000;
         ProgramLines = new ProgramLineDictionary();
         InitializeComponent();
@@ -74,14 +74,14 @@ public partial class TerminalMatrixControl : UserControl
     {
         for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
-                _characterColorMap[x, y] = 1;
+                _characterColorMap[x, y] = CurrentCursorColor;
     }
 
     public void ClearCharacterMap()
     {
         for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
-                _characterMap[x, y] = 32;
+                _characterMap[x, y] = CharacterMatrixDefinition.CharacterEmpty;
     }
 
     public void ClearPixelMap()
@@ -179,7 +179,7 @@ public partial class TerminalMatrixControl : UserControl
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             {
                 var characterFont = _font[_characterMap[x, y]];
-                var c = _palette.GetColor(ColorName.Green).ToArgb();
+                var c = _palette.GetColor(_characterColorMap[x, y]).ToArgb();
                 var pixelStart = new Coordinate(x * 8, y * 8);
                 var source = new Coordinate(0, 0);
 
@@ -305,6 +305,7 @@ public partial class TerminalMatrixControl : UserControl
         switch (e.KeyData)
         {
             case Keys.PageUp:
+
                 if (TerminalState.InputMode)
                     return;
 
@@ -312,6 +313,7 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             case Keys.PageDown:
+
                 if (TerminalState.InputMode)
                     return;
 
@@ -327,8 +329,14 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             case Keys.Insert:
+                DoInsert(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
+                DoInsert(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
+                ShowEffect();
                 break;
             case Keys.Delete:
+                DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
+                DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
+                ShowEffect();
                 break;
             default:
                 _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
@@ -396,6 +404,16 @@ public partial class TerminalMatrixControl : UserControl
 
         if (fireEventTypedLine)
             TypedLine?.Invoke(this, eventArgs!);
+    }
+
+    private static void DoInsert(int[,] map, int empty)
+    {
+        
+    }
+
+    private static void DoDelete(int[,] map, int empty)
+    {
+
     }
 
     private bool AddProgramLine(string value, bool shift)

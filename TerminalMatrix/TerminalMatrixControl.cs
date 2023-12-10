@@ -2,7 +2,6 @@
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using TerminalMatrix.Definitions;
@@ -423,7 +422,16 @@ public partial class TerminalMatrixControl : UserControl
 
     private void DoDelete(int[,] map, int empty)
     {
+        if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
+        {
+            map[CursorPosition.X, CursorPosition.Y] = empty;
+            return;
+        }
 
+        for (var x = CursorPosition.X; x < CharacterMatrixDefinition.Width - 1; x++)
+            map[x, CursorPosition.Y] = map[x + 1, CursorPosition.Y];
+
+        map[CharacterMatrixDefinition.Width - 1, CursorPosition.Y] = empty;
     }
 
     private bool AddProgramLine(string value, bool shift)

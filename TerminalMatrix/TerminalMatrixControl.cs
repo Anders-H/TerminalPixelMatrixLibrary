@@ -2,6 +2,7 @@
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using TerminalMatrix.Definitions;
@@ -406,12 +407,21 @@ public partial class TerminalMatrixControl : UserControl
             TypedLine?.Invoke(this, eventArgs!);
     }
 
-    private static void DoInsert(int[,] map, int empty)
+    private void DoInsert(int[,] map, int empty)
     {
-        
+        if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
+        {
+            map[CursorPosition.X, CursorPosition.Y] = empty;
+            return;
+        }
+
+        for (var x = CharacterMatrixDefinition.Width - 2; x >= CursorPosition.X; x--)
+            map[x + 1, CursorPosition.Y] = map[x, CursorPosition.Y];
+
+        map[CursorPosition.X, CursorPosition.Y] = empty;
     }
 
-    private static void DoDelete(int[,] map, int empty)
+    private void DoDelete(int[,] map, int empty)
     {
 
     }

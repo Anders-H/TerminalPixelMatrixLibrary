@@ -331,7 +331,9 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             case Keys.Back:
-                if (CursorPosition.X > 0)
+                var limit = TerminalState.InputMode ? TerminalState.InputStartX : 0;
+
+                if (CursorPosition.X > limit)
                 {
                     CursorPosition.X--;
                     DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
@@ -340,7 +342,7 @@ public partial class TerminalMatrixControl : UserControl
                 }
                 break;
             default:
-                _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
+                _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
                 break;
         }
 
@@ -361,7 +363,9 @@ public partial class TerminalMatrixControl : UserControl
         var fireEventTypedLine = false;
         var inputValue = new StringBuilder();
 
-        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+        var start = TerminalState.InputMode ? TerminalState.InputStartX : 0;
+
+        for (var x = start; x < CharacterMatrixDefinition.Width; x++)
             inputValue.Append(_codePage.Chr[_characterMap[x, CursorPosition.Y]]);
 
         var v = inputValue.ToString().Trim();

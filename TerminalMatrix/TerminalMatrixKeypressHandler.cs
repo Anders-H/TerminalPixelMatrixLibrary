@@ -17,7 +17,7 @@ internal class TerminalMatrixKeypressHandler
             typeCharacter(e.KeyChar);
     }
 
-    internal void HandleKeyDown(KeyEventArgs e, bool inputMode, Action<char> typeCharacter, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
+    internal void HandleKeyDown(KeyEventArgs e, bool inputMode, int inputStartX, Action<char> typeCharacter, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
     {
         if (e.KeyCode == Keys.Enter)
         {
@@ -28,19 +28,33 @@ internal class TerminalMatrixKeypressHandler
         switch (e.KeyData)
         {
             case Keys.Left:
-                if (cursorPosition.X > 0)
+                if (inputMode)
                 {
-                    cursorPosition.X--;
-                    showKeyboardActivity();
+                    if (cursorPosition.X > inputStartX)
+                    {
+                        cursorPosition.X--;
+                        showKeyboardActivity();
+                    }
                 }
-                else if (cursorPosition.Y > 0)
+                else
                 {
-                    cursorPosition.X = CharacterMatrixDefinition.Width - 1;
-                    cursorPosition.Y--;
-                    showKeyboardActivity();
+                    if (cursorPosition.X > 0)
+                    {
+                        cursorPosition.X--;
+                        showKeyboardActivity();
+                    }
+                    else if (cursorPosition.Y > 0)
+                    {
+                        cursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                        cursorPosition.Y--;
+                        showKeyboardActivity();
+                    }
                 }
                 break;
             case Keys.Up:
+                if (inputMode)
+                    return;
+
                 if (cursorPosition.Y > 0)
                 {
                     cursorPosition.Y--;
@@ -48,19 +62,33 @@ internal class TerminalMatrixKeypressHandler
                 }
                 break;
             case Keys.Right:
-                if (cursorPosition.X < CharacterMatrixDefinition.Width - 1)
+                if (inputMode)
                 {
-                    cursorPosition.X++;
-                    showKeyboardActivity();
+                    if (cursorPosition.X < CharacterMatrixDefinition.Width - 1)
+                    {
+                        cursorPosition.X++;
+                        showKeyboardActivity();
+                    }
                 }
-                else if (cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                else
                 {
-                    cursorPosition.X = 0;
-                    cursorPosition.Y++;
-                    showKeyboardActivity();
+                    if (cursorPosition.X < CharacterMatrixDefinition.Width - 1)
+                    {
+                        cursorPosition.X++;
+                        showKeyboardActivity();
+                    }
+                    else if (cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                    {
+                        cursorPosition.X = 0;
+                        cursorPosition.Y++;
+                        showKeyboardActivity();
+                    }
                 }
                 break;
             case Keys.Down:
+                if (inputMode)
+                    return;
+
                 if (cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
                 {
                     cursorPosition.Y++;

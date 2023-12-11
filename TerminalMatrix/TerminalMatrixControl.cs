@@ -30,7 +30,7 @@ public partial class TerminalMatrixControl : UserControl
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
     public int CurrentCursorColor { get; set; }
-    public ProgramLineDictionary ProgramLines { get; }
+    public ProgramLineDictionary ProgramLines { get; } = new();
 
     public TerminalMatrixControl()
     {
@@ -46,7 +46,6 @@ public partial class TerminalMatrixControl : UserControl
         _keypressHandler = new TerminalMatrixKeypressHandler(this);
         CurrentCursorColor = (int)ColorName.White;
         _timer.Interval = 1000;
-        ProgramLines = new ProgramLineDictionary();
         InitializeComponent();
     }
 
@@ -267,13 +266,6 @@ public partial class TerminalMatrixControl : UserControl
             CursorPosition.X++;
             ShowKeyboardActivity();
         }
-        // Needed for multiline support, not supported now.
-        //else if (!TerminalState.InputMode && CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
-        //{
-        //    CursorPosition.X = 0;
-        //    CursorPosition.Y++;
-        //    ShowKeyboardActivity();
-        //}
 
         ShowKeyboardActivity();
     }
@@ -337,6 +329,15 @@ public partial class TerminalMatrixControl : UserControl
                 DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
                 DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
                 ShowEffect();
+                break;
+            case Keys.Back:
+                if (CursorPosition.X > 0)
+                {
+                    CursorPosition.X--;
+                    DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
+                    DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
+                    ShowEffect();
+                }
                 break;
             default:
                 _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
@@ -486,13 +487,44 @@ public partial class TerminalMatrixControl : UserControl
 
     public void BeginInput(string prompt)
     {
+        if (prompt.Length > CharacterMatrixDefinition.Width - 2)
+            prompt = prompt.Substring(0, CharacterMatrixDefinition.Width - 2);
+
+        ClearLine(_characterMap, CursorPosition.Y, CharacterMatrixDefinition.CharacterEmpty);
+        ClearLine(_characterColorMap, CursorPosition.Y, CurrentCursorColor);
+        Write(prompt);
+        TerminalState.InputStartX = prompt.Length;
+        CursorPosition.X = TerminalState.InputStartX;
         TerminalState.InputMode = true;
+        UpdateBitmap();
+        Invalidate();
+    }
+
+    private void ClearLine(int[,] map, int y, int clear)
+    {
+        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+            map[x, y] = clear;
     }
 
     public void List()
     {
         foreach (var programLine in ProgramLines)
             WriteLine(programLine.Value.RawString);
+    }
+
+    private void Write(string text)
+    {
+        var y = CursorPosition.Y;
+
+        for (var x = 0; x < text.Length; x++)
+        {
+            if (x >= CharacterMatrixDefinition.Width)
+                break;
+            _characterMap[x, y] = text[x];
+        }
+
+        UpdateBitmap();
+        Invalidate();
     }
 
     private void WriteLine(string text)

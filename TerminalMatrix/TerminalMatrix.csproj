@@ -6,6 +6,22 @@
 		<UseWindowsForms>true</UseWindowsForms>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<Title>TerminalMatrix</Title>
+		<Company>Anders Hesselbom</Company>
+		<Version>1.0</Version>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+		<AssemblyVersion>1.0</AssemblyVersion>
+		<FileVersion>1.0</FileVersion>
+		<Description>A pixel based terminal matrix.</Description>
+		<PackageIcon>8678521_terminal_box_fill_icon.png</PackageIcon>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <None Include="C:\Users\hbom\Desktop\8678521_terminal_box_fill_icon.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
 
 </Project>

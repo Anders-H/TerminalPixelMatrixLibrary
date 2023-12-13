@@ -9,7 +9,7 @@ public partial class Form1 : Form
         InitializeComponent();
     }
 
-    private void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
+    private async void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
     {
         Text = $@"{DateTime.Now.ToShortTimeString()} ""{e.InputValue}""";
 
@@ -28,6 +28,11 @@ public partial class Form1 : Form
         {
             System.Diagnostics.Debug.WriteLine("Starting input.");
             terminalMatrixControl1.BeginInput("Hello? ");
+        }
+        else if (e.InputValue == "INLINE INPUT")
+        {
+            var response = terminalMatrixControl1.Input("What now? ");
+            terminalMatrixControl1.WriteLine($"You say: {response}");
         }
         else if (e.InputValue == "LIST")
         {

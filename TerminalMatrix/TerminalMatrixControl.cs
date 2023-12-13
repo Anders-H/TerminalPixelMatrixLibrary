@@ -21,6 +21,7 @@ public partial class TerminalMatrixControl : UserControl
     private readonly int[] _bitmap;
     private bool _cursorVisibleBlink;
     private readonly System.Windows.Forms.Timer _timer = new();
+    private string _lastInput;
     // ReSharper disable once CollectionNeverUpdated.Local
     private readonly TerminalFont _font = new();
     private readonly TerminalCodePage _codePage;
@@ -40,6 +41,7 @@ public partial class TerminalMatrixControl : UserControl
         _pixelMap = PixelMatrixDefinition.Create();
         _bitmap = PixelMatrixDefinition.CreateBitmap();
         _cursorVisibleBlink = false;
+        _lastInput = "";
         _codePage = new TerminalCodePage();
         _palette = new Palette();
         TerminalState = new TerminalState();
@@ -294,6 +296,21 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
+        if (e.KeyCode == Keys.Back)
+        {
+            var limit = TerminalState.InputMode ? TerminalState.InputStartX : 0;
+
+            if (CursorPosition.X > limit)
+            {
+                CursorPosition.X--;
+                DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
+                DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
+                ShowEffect();
+            }
+
+            return;
+        }
+
         switch (e.KeyData)
         {
             case Keys.PageUp:
@@ -329,17 +346,6 @@ public partial class TerminalMatrixControl : UserControl
                 DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
                 DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
                 ShowEffect();
-                break;
-            case Keys.Back:
-                var limit = TerminalState.InputMode ? TerminalState.InputStartX : 0;
-
-                if (CursorPosition.X > limit)
-                {
-                    CursorPosition.X--;
-                    DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
-                    DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
-                    ShowEffect();
-                }
                 break;
             default:
                 _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
@@ -381,6 +387,7 @@ public partial class TerminalMatrixControl : UserControl
             if (TerminalState.InputMode)
             {
                 TerminalState.InputMode = false;
+                _lastInput = v;
                 InputCompleted?.Invoke(this, eventArgs);
             }
             else
@@ -552,6 +559,20 @@ public partial class TerminalMatrixControl : UserControl
 
         UpdateBitmap();
         Invalidate();
+    }
+
+    public string Input(string prompt)
+    {
+        BeginInput(prompt);
+
+        do
+        {
+            Thread.Yield();
+            Thread.Sleep(2);
+            Application.DoEvents();
+        } while (TerminalState.InputMode);
+
+        return _lastInput;
     }
 
     public void New()

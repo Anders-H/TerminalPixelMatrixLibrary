@@ -45,4 +45,9 @@ public partial class Form1 : Form
     {
         Text = $@"INPUT COMPLETED {DateTime.Now.ToShortTimeString()} ""{e.InputValue}""";
     }
+
+    private void Form1_Load(object sender, EventArgs e)
+    {
+        terminalMatrixControl1.WriteLine($"{new string(' ', 28)}*** A BASIC LANGUAGE ***");
+    }
 }

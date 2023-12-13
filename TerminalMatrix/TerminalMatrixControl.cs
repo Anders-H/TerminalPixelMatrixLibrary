@@ -516,7 +516,7 @@ public partial class TerminalMatrixControl : UserControl
             WriteLine(programLine.Value.RawString);
     }
 
-    private void Write(string text)
+    public void Write(string text)
     {
         var y = CursorPosition.Y;
 
@@ -531,7 +531,7 @@ public partial class TerminalMatrixControl : UserControl
         Invalidate();
     }
 
-    private void WriteLine(string text)
+    public void WriteLine(string text)
     {
         var y = CursorPosition.Y;
 
@@ -539,6 +539,7 @@ public partial class TerminalMatrixControl : UserControl
         {
             if (x >= CharacterMatrixDefinition.Width)
                 break;
+
             _characterMap[x, y] = text[x];
         }
 

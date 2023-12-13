@@ -8,13 +8,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>1.0</Version>
+		<Version>1.1</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>1.0</AssemblyVersion>
-		<FileVersion>1.0</FileVersion>
+		<AssemblyVersion>1.1</AssemblyVersion>
+		<FileVersion>1.1</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>8678521_terminal_box_fill_icon.png</PackageIcon>
+		<PackageReleaseNotes>Exposed the Write and WriteLine methods.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

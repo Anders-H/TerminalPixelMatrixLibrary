@@ -5,7 +5,7 @@ namespace TestApplication;
 
 public partial class Form1 : Form
 {
-    private Random _rnd = new Random();
+    private readonly Random _rnd = new();
 
     public Form1()
     {

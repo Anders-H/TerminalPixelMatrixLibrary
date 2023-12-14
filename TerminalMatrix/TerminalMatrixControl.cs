@@ -67,6 +67,23 @@ public partial class TerminalMatrixControl : UserControl
         Invalidate();
     }
 
+    /// <summary>
+    /// First visible text line.
+    /// </summary>
+    /// <param name="limit">0 (default, all lines are visible) to 23 (only the bottom two lines are visible)</param>
+    public void SetTextRenderLimit(int limit)
+    {
+        if (limit < 0 || limit > 23)
+            throw new ArgumentOutOfRangeException(nameof(limit));
+
+        if (CursorPosition.Y < limit)
+            CursorPosition.Y = limit;
+
+        CharacterMatrixDefinition.TextRenderLimit = limit;
+        UpdateBitmap();
+        Invalidate();
+    }
+
     public void SetStartPosition(int x, int y)
     {
         CursorPosition.Set(x, y);
@@ -186,7 +203,7 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
-        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
+        for (var y = CharacterMatrixDefinition.TextRenderLimit; y < CharacterMatrixDefinition.Height; y++)
         {
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             {
@@ -346,7 +363,7 @@ public partial class TerminalMatrixControl : UserControl
                 if (TerminalState.InputMode)
                     return;
 
-                CursorPosition.Y = 0;
+                CursorPosition.Y = CharacterMatrixDefinition.TextRenderLimit;
                 ShowEffect();
                 break;
             case Keys.PageDown:

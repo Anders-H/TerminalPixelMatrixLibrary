@@ -43,7 +43,7 @@ internal class TerminalMatrixKeypressHandler
                         cursorPosition.X--;
                         showKeyboardActivity();
                     }
-                    else if (cursorPosition.Y > 0)
+                    else if (cursorPosition.Y > CharacterMatrixDefinition.TextRenderLimit)
                     {
                         cursorPosition.X = CharacterMatrixDefinition.Width - 1;
                         cursorPosition.Y--;
@@ -55,7 +55,7 @@ internal class TerminalMatrixKeypressHandler
                 if (inputMode)
                     return;
 
-                if (cursorPosition.Y > 0)
+                if (cursorPosition.Y > CharacterMatrixDefinition.TextRenderLimit)
                 {
                     cursorPosition.Y--;
                     showKeyboardActivity();

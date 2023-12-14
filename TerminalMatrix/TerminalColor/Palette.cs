@@ -37,4 +37,25 @@ public class Palette : IEnumerable<Color>
 
     IEnumerator IEnumerable.GetEnumerator() =>
         GetEnumerator();
+
+    public int SearchColor(Color c)
+    {
+        for (var i = 0; i < Colors.Length; i++)
+        {
+            if (ColorsAreClose(i, c))
+                return i;
+        }
+
+        throw new InvalidOperationException("GIF contains colors outside the allowed palette.");
+    }
+
+    private bool ColorsAreClose(int targetColorIndex, Color sampleColor)
+    {
+        var targetColor = Colors[targetColorIndex];
+        const int threshold = 5;
+
+        return Math.Max(targetColor.R, sampleColor.R) - Math.Min(targetColor.R, sampleColor.R) < threshold
+               && Math.Max(targetColor.G, sampleColor.G) - Math.Min(targetColor.G, sampleColor.G) < threshold
+               && Math.Max(targetColor.B, sampleColor.B) - Math.Min(targetColor.B, sampleColor.B) < threshold;
+    }
 }

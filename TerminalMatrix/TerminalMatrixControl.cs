@@ -132,6 +132,43 @@ public partial class TerminalMatrixControl : UserControl
             _pixelMap[x, y] = c;
     }
 
+    public int[,] LoadPictureFromGif(string filename)
+    {
+        using var gif = new Bitmap(filename);
+        var result = new int[gif.Width, gif.Height];
+
+        for (var y = 0; y < gif.Height; y++)
+            for (var x = 0; x < gif.Width; x++)
+                result[x, y] = _palette.SearchColor(gif.GetPixel(x, y));
+
+        return result;
+    }
+
+    public void SetPixel(int x, int y, ColorName color)
+    {
+        _pixelMap[x, y] = (int)color;
+    }
+
+    public void SetPixels(int x, int y, int[,] colors)
+    {
+        var targetX = x;
+        var targetY = y;
+
+        for (var sourceY = 0; sourceY < colors.GetLength(1); sourceY++)
+        {
+            for (var sourceX = 0; sourceX < colors.GetLength(0); sourceX++)
+            {
+                if (targetX >= 0 && targetX < PixelMatrixDefinition.Width && targetY >= 0 && targetY < PixelMatrixDefinition.Height)
+                    _pixelMap[targetX, targetY] = colors[sourceX, sourceY];
+
+                targetX++;
+            }
+
+            targetX = x;
+            targetY++;
+        }
+    }
+
     public void HorizontalLine(int x1, int y, int x2, ColorName color)
     {
         var c = (int)color;

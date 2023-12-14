@@ -8,14 +8,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>1.2</Version>
+		<Version>1.3</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>1.2</AssemblyVersion>
-		<FileVersion>1.2</FileVersion>
+		<AssemblyVersion>1.3</AssemblyVersion>
+		<FileVersion>1.3</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>terminal.png</PackageIcon>
-		<PackageReleaseNotes>An Input function is added.</PackageReleaseNotes>
+		<PackageReleaseNotes>The cursor color is corrected, layer order can be changed, text area can be limited.</PackageReleaseNotes>
 	</PropertyGroup>
 
 	<ItemGroup>

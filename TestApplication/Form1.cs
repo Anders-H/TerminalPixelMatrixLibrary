@@ -5,6 +5,8 @@ namespace TestApplication;
 
 public partial class Form1 : Form
 {
+    private Random _rnd = new Random();
+
     public Form1()
     {
         InitializeComponent();
@@ -16,6 +18,9 @@ public partial class Form1 : Form
 
         if (e.InputValue == "IA")
         {
+            for (int i = 0; i < 300; i++)
+                terminalMatrixControl1.SetPixel(_rnd.Next(640), _rnd.Next(200), ColorName.Red);
+
             terminalMatrixControl1.SetLayerOrder(LayerOrder.GraphicsOverText);
             terminalMatrixControl1.HorizontalLine(40, ColorName.Cyan);
             terminalMatrixControl1.HorizontalLine(10, 41, 630, ColorName.DarkGrey);
@@ -53,6 +58,12 @@ public partial class Form1 : Form
         else if (e.InputValue == "LIMIT")
         {
             terminalMatrixControl1.SetTextRenderLimit(23);
+        }
+        else if (e.InputValue == "GIF")
+        {
+            var gif = terminalMatrixControl1.LoadPictureFromGif(@"..\..\..\..\testgif.gif");
+            terminalMatrixControl1.SetPixels(0, 0, gif);
+            terminalMatrixControl1.UpdateBitmap();
         }
     }
 

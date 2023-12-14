@@ -1,3 +1,4 @@
+using TerminalMatrix;
 using TerminalMatrix.TerminalColor;
 
 namespace TestApplication;
@@ -15,6 +16,7 @@ public partial class Form1 : Form
 
         if (e.InputValue == "IA")
         {
+            terminalMatrixControl1.SetLayerOrder(LayerOrder.GraphicsOverText);
             terminalMatrixControl1.HorizontalLine(40, ColorName.Cyan);
             terminalMatrixControl1.HorizontalLine(10, 41, 630, ColorName.DarkGrey);
             terminalMatrixControl1.VerticalLine(40, ColorName.Green);

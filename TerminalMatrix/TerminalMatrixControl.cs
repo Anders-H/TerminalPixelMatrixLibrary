@@ -22,7 +22,6 @@ public partial class TerminalMatrixControl : UserControl
     private bool _cursorVisibleBlink;
     private readonly System.Windows.Forms.Timer _timer = new();
     private string _lastInput;
-    // ReSharper disable once CollectionNeverUpdated.Local
     private readonly TerminalFont _font = new();
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;

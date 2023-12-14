@@ -9,7 +9,7 @@ public partial class Form1 : Form
         InitializeComponent();
     }
 
-    private async void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
+    private void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
     {
         Text = $@"{DateTime.Now.ToShortTimeString()} ""{e.InputValue}""";
 
@@ -43,6 +43,10 @@ public partial class Form1 : Form
         {
             System.Diagnostics.Debug.WriteLine("Call new.");
             terminalMatrixControl1.New();
+        }
+        else if (e.InputValue == "RED")
+        {
+            terminalMatrixControl1.CurrentCursorColor = (int)ColorName.Red;
         }
     }
 

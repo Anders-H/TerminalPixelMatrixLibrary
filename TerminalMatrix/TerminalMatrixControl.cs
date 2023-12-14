@@ -180,6 +180,7 @@ public partial class TerminalMatrixControl : UserControl
             {
                 var characterFont = _font[_characterMap[x, y]];
                 var c = _palette.GetColor(_characterColorMap[x, y]).ToArgb();
+                var cursCol = _palette.GetColor(CurrentCursorColor).ToArgb();
                 var pixelStart = new Coordinate(x * 8, y * 8);
                 var source = new Coordinate(0, 0);
 
@@ -195,7 +196,7 @@ public partial class TerminalMatrixControl : UserControl
                             if (_cursorVisibleBlink)
                                 _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? c : 0;
                             else
-                                _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? 0 : c;
+                                _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? 0 : cursCol;
 
                             source.X++;
                         }

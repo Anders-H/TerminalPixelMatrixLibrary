@@ -2,7 +2,7 @@
 
 public class TerminalCodePage
 {
-    public const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,.;:!?\"@#$%&/\\*-+'()";
+    public const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,.;:!?\"@#$%&/\\*-+'()<>=";
     public Dictionary<byte, char> Chr { get; }
     public Dictionary<char, byte> Asc { get; }
 

@@ -61,6 +61,30 @@ public class TerminalFont : IReadOnlyDictionary<int, CharacterPixelMatrix>
                 )
             },
             {
+                tcp.Asc['<'], new CharacterPixelMatrix(
+                    @",,,,,,,," +
+                    @",,,,**,," +
+                    @",,,**,,," +
+                    @",,**,,,," +
+                    @",,**,,,," +
+                    @",,,**,,," +
+                    @",,,,**,," +
+                    @",,,,,,,,"
+                )
+            },
+            {
+                tcp.Asc['>'], new CharacterPixelMatrix(
+                    @",,,,,,,," +
+                    @",,**,,,," +
+                    @",,,**,,," +
+                    @",,,,**,," +
+                    @",,,,**,," +
+                    @",,,**,,," +
+                    @",,**,,,," +
+                    @",,,,,,,,"
+                )
+            },
+            {
                 tcp.Asc['#'], new CharacterPixelMatrix(
                     @",,*,,*,," +
                     @",******," +
@@ -1003,6 +1027,18 @@ public class TerminalFont : IReadOnlyDictionary<int, CharacterPixelMatrix>
                     @",,,,,,,," +
                     @",******," +
                     @",,,,,,,," +
+                    @",,,,,,,," +
+                    @",,,,,,,," +
+                    @",,,,,,,,"
+                )
+            },
+            {
+                tcp.Asc['='], new CharacterPixelMatrix(
+                    @",,,,,,,," +
+                    @",,,,,,,," +
+                    @",******," +
+                    @",,,,,,,," +
+                    @",******," +
                     @",,,,,,,," +
                     @",,,,,,,," +
                     @",,,,,,,,"

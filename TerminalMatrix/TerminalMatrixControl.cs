@@ -1,4 +1,5 @@
-﻿using System.Drawing.Drawing2D;
+﻿using System.DirectoryServices.ActiveDirectory;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -27,6 +28,7 @@ public partial class TerminalMatrixControl : UserControl
     private readonly Palette _palette;
     private TerminalState TerminalState { get; }
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
+    private bool _quitFlag;
     private LayerOrder _layerOrder;
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
@@ -49,6 +51,7 @@ public partial class TerminalMatrixControl : UserControl
         _layerOrder = LayerOrder.GraphicsOverText;
         CurrentCursorColor = (int)ColorName.White;
         _timer.Interval = 1000;
+        _quitFlag = false;
         InitializeComponent();
     }
 
@@ -354,6 +357,11 @@ public partial class TerminalMatrixControl : UserControl
         ShowKeyboardActivity();
     }
 
+    public void WriteText(string text)
+    {
+
+    }
+
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
     {
         switch (e.KeyCode)
@@ -652,7 +660,7 @@ public partial class TerminalMatrixControl : UserControl
             Thread.Yield();
             Thread.Sleep(2);
             Application.DoEvents();
-        } while (TerminalState.InputMode);
+        } while (TerminalState.InputMode && !_quitFlag);
 
         return _lastInput;
     }
@@ -660,5 +668,10 @@ public partial class TerminalMatrixControl : UserControl
     public void New()
     {
         ProgramLines.Clear();
+    }
+
+    public void Quit()
+    {
+        _quitFlag = true;
     }
 }

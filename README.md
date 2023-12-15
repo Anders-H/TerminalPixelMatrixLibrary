@@ -30,3 +30,14 @@ terminalMatrixControl1.UpdateBitmap();
 The image is a screenshot of the AdventureGameExample projet, a text adventure game dummy.
 
 ![Text adventure dummy](https://raw.githubusercontent.com/Anders-H/TerminalPixelMatrixLibrary/main/screenshot_adventure_game_dummy.jpg)
+
+## Limitations
+
+For a clean exit, you must call the Quit method in the FormClosed event handler.
+
+```
+private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+{
+    terminalMatrixControl1.Quit();
+}
+```

@@ -48,6 +48,7 @@
             Controls.Add(terminalMatrixControl1);
             Name = "MainWindow";
             Text = "Adventure!";
+            FormClosed += MainWindow_FormClosed;
             Shown += MainWindow_Shown;
             ResumeLayout(false);
         }

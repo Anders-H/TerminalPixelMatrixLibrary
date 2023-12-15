@@ -65,6 +65,10 @@ public partial class Form1 : Form
             terminalMatrixControl1.SetPixels(0, 0, gif);
             terminalMatrixControl1.UpdateBitmap();
         }
+        else if (e.InputValue == "WORDWRAP")
+        {
+            terminalMatrixControl1.WriteText("While the sun hangs in the sky and the desert has sand. While the waves crash in the sea and meet the land. While there's a wind and the stars and the rainbow. Till the mountains crumble into the plain.");
+        }
     }
 
     private void terminalMatrixControl1_InputCompleted(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
@@ -75,5 +79,10 @@ public partial class Form1 : Form
     private void Form1_Load(object sender, EventArgs e)
     {
         terminalMatrixControl1.WriteLine($"{new string(' ', 28)}*** A BASIC LANGUAGE ***");
+    }
+
+    private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+    {
+        terminalMatrixControl1.Quit();
     }
 }

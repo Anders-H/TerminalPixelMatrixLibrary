@@ -5,8 +5,10 @@ namespace TerminalMatrix;
 
 internal static class WordWrapper
 {
-    public static string WordWrap(string text)
+    public static List<string> WordWrap(string text)
     {
+        var result = new List<string>();
+
         static int Break(string breakText, int breakPos, int max)
         {
             var position = max;
@@ -45,7 +47,8 @@ internal static class WordWrapper
                         length = Break(text, charPointer, CharacterMatrixDefinition.Width);
                     
                     s.Append(text, charPointer, length);
-                    s.AppendLine();
+                    result.Add(s.ToString());
+                    s.Clear();
                     charPointer += length;
                     
                     while (charPointer < endOfLine && char.IsWhiteSpace(text[charPointer]))
@@ -56,9 +59,10 @@ internal static class WordWrapper
                 continue;
             }
 
-            s.AppendLine();
+            result.Add(s.ToString());
+            s.Clear();
         }
 
-        return s.ToString();
+        return result;
     }
 }

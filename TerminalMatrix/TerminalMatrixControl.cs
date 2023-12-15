@@ -359,7 +359,10 @@ public partial class TerminalMatrixControl : UserControl
 
     public void WriteText(string text)
     {
+        var rows = WordWrapper.WordWrap(text);
 
+        foreach (var row in rows)
+            WriteLine(row);
     }
 
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
@@ -570,7 +573,7 @@ public partial class TerminalMatrixControl : UserControl
 
     private new void Scroll()
     {
-        ScrollCharacterMap(_characterColorMap, 0);
+        ScrollCharacterMap(_characterColorMap, CurrentCursorColor);
         ScrollCharacterMap(_characterMap, (byte)' ');
     }
 

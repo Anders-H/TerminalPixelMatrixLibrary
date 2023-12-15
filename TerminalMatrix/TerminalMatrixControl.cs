@@ -28,8 +28,8 @@ public partial class TerminalMatrixControl : UserControl
     private readonly Palette _palette;
     private TerminalState TerminalState { get; }
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
-    private bool _quitFlag;
     private LayerOrder _layerOrder;
+    public bool QuitFlag { get; private set; }
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
     public byte CurrentCursorColor { get; set; }
@@ -51,7 +51,7 @@ public partial class TerminalMatrixControl : UserControl
         _layerOrder = LayerOrder.GraphicsOverText;
         CurrentCursorColor = (int)ColorName.White;
         _timer.Interval = 1000;
-        _quitFlag = false;
+        QuitFlag = false;
         InitializeComponent();
     }
 
@@ -663,7 +663,7 @@ public partial class TerminalMatrixControl : UserControl
             Thread.Yield();
             Thread.Sleep(2);
             Application.DoEvents();
-        } while (TerminalState.InputMode && !_quitFlag);
+        } while (TerminalState.InputMode && !QuitFlag);
 
         return _lastInput;
     }
@@ -675,6 +675,6 @@ public partial class TerminalMatrixControl : UserControl
 
     public void Quit()
     {
-        _quitFlag = true;
+        QuitFlag = true;
     }
 }

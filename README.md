@@ -25,3 +25,7 @@ var gif = terminalMatrixControl1.LoadPictureFromGif(@"..\..\..\..\testgif.gif");
 terminalMatrixControl1.SetPixels(0, 0, gif);
 terminalMatrixControl1.UpdateBitmap();
 ```
+
+The image is a screenshot of the AdventureGameExample projet, a text adventure game dummy.
+
+![Text adventure dummy](https://raw.githubusercontent.com/Anders-H/TerminalPixelMatrixLibrary/main/screenshot_adventure_game_dummy.jpg)

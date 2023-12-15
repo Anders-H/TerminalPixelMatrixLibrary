@@ -1,6 +1,14 @@
 # TerminalPixelMatrixLibrary
 An 8-bit video interface emulator. Hope to make it good enough to replace the GUI code in our Altair BASIC emulator, [A-BASIC-Language](https://github.com/tomas-hakansson/A-BASIC-Language).
 
+## Limit text area
+
+When the text area is unlimited, the text terminal displays 25 lines of text.
+This amount can be limited using the `SetTextRenderLimit` method.
+`0` means that text is allowed everywhere, a larger value leaves empty space on the
+upper part of the screen, and the largest value (`23`) only allows two
+lines of text on the bottom of the screen.
+
 ## Bitmap images
 
 To produce a bitmap image, create a picture (preferably a 16 color GIF file) using

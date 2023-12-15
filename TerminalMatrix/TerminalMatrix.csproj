@@ -8,14 +8,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>1.4</Version>
+		<Version>1.5</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>1.4</AssemblyVersion>
-		<FileVersion>1.4</FileVersion>
+		<AssemblyVersion>1.5</AssemblyVersion>
+		<FileVersion>1.5</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>terminal.png</PackageIcon>
-		<PackageReleaseNotes>Bitmap is now byte based and the palette is extended to 32 colors..</PackageReleaseNotes>
+		<PackageReleaseNotes>Added support for wordwrapping..</PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/Anders-H/TerminalPixelMatrixLibrary</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>

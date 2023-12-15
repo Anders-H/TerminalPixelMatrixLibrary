@@ -17,5 +17,21 @@ public enum ColorName
     Grey,
     LightGreen,
     LightBlue,
-    LightGrey
+    LightGrey,
+    XtendedVeryDarkCyan,
+    XtendedVeryLightGrey,
+    XtendedDarkRed,
+    XtendedDarkCyan,
+    XtendedDarkViolet,
+    XtendedDarkGreen,
+    XtendedDarkBlue,
+    XtendedDarkYellow,
+    XtendedDarkOrange,
+    XtendedDarkBrown,
+    XtendedClearRed,
+    XtendedVeryDarkGrey,
+    XtendedMiddleGrey,
+    XtendedVeryDarkGreen,
+    XtendedMiddleBlue,
+    XtendedDarkPaleGreen
 }

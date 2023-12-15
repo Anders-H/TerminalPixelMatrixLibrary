@@ -11,10 +11,10 @@ lines of text on the bottom of the screen.
 
 ## Bitmap images
 
-To produce a bitmap image, create a picture (preferably a 16 color GIF file) using
+To produce a bitmap image, create a picture (preferably a 16 or 32 color GIF file) using
 the palette described in the
-[ah-c64-palette.act](https://github.com/Anders-H/TerminalPixelMatrixLibrary/blob/main/ah-c64-palette.act) Photoshop file
-or in the source code [here](https://github.com/Anders-H/TerminalPixelMatrixLibrary/blob/main/TerminalMatrix/TerminalColor/Palette.cs).
+[ah-c64-palette.act](https://github.com/Anders-H/TerminalPixelMatrixLibrary/blob/main/ah-c64-palette.act) Photoshop file (or the [extended 32 color file]((https://github.com/Anders-H/TerminalPixelMatrixLibrary/blob/main/ah-c64-palette-extended.act))).
+The color palette is also described in the source code, [here](https://github.com/Anders-H/TerminalPixelMatrixLibrary/blob/main/TerminalMatrix/TerminalColor/Palette.cs).
 Remember that pixels are more high then wide, and that the interface emulator only can display 640 * 200 pixels at one time.
 
 To display an image, load it as a byte array using the `LoadPictureFromGif` function and draw it using the `SetPixels` function.

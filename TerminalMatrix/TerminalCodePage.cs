@@ -3,17 +3,17 @@
 public class TerminalCodePage
 {
     public const string Characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ,.;:!?\"@#$%&/\\*-+'()";
-    public Dictionary<int, char> Chr { get; }
-    public Dictionary<char, int> Asc { get; }
+    public Dictionary<byte, char> Chr { get; }
+    public Dictionary<char, byte> Asc { get; }
 
     public TerminalCodePage()
     {
-        Chr = new Dictionary<int, char>();
+        Chr = new Dictionary<byte, char>();
 
         foreach (var character in Characters)
-            Chr.Add(character, character);
+            Chr.Add((byte)character, character);
 
-        Asc = new Dictionary<char, int>();
+        Asc = new Dictionary<char, byte>();
 
         foreach (var c in Chr)
             Asc.Add(c.Value, c.Key);

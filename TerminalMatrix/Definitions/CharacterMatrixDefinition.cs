@@ -12,6 +12,6 @@ public static class CharacterMatrixDefinition
         TextRenderLimit = 0;
     }
 
-    public static int[,] Create() =>
-        new int[Width, Height];
+    public static byte[,] Create() =>
+        new byte[Width, Height];
 }

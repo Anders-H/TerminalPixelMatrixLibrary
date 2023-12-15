@@ -15,9 +15,9 @@ public partial class TerminalMatrixControl : UserControl
     public event TypedLineDelegate? TypedLine;
     public event InputCompletedDelegate? InputCompleted;
 
-    private readonly int[,] _characterColorMap;
-    private readonly int[,] _characterMap;
-    private readonly int[,] _pixelMap;
+    private readonly byte[,] _characterColorMap;
+    private readonly byte[,] _characterMap;
+    private readonly byte[,] _pixelMap;
     private readonly int[] _bitmap;
     private bool _cursorVisibleBlink;
     private readonly System.Windows.Forms.Timer _timer = new();
@@ -30,7 +30,7 @@ public partial class TerminalMatrixControl : UserControl
     private LayerOrder _layerOrder;
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
-    public int CurrentCursorColor { get; set; }
+    public byte CurrentCursorColor { get; set; }
     public ProgramLineDictionary ProgramLines { get; } = new();
 
     public TerminalMatrixControl()
@@ -126,16 +126,16 @@ public partial class TerminalMatrixControl : UserControl
 
     public void HorizontalLine(int y, ColorName color)
     {
-        var c = (int)color;
+        var c = (byte)color;
 
         for (var x = 0; x < PixelMatrixDefinition.Width; x++)
             _pixelMap[x, y] = c;
     }
 
-    public int[,] LoadPictureFromGif(string filename)
+    public byte[,] LoadPictureFromGif(string filename)
     {
         using var gif = new Bitmap(filename);
-        var result = new int[gif.Width, gif.Height];
+        var result = new byte[gif.Width, gif.Height];
 
         for (var y = 0; y < gif.Height; y++)
             for (var x = 0; x < gif.Width; x++)
@@ -146,10 +146,10 @@ public partial class TerminalMatrixControl : UserControl
 
     public void SetPixel(int x, int y, ColorName color)
     {
-        _pixelMap[x, y] = (int)color;
+        _pixelMap[x, y] = (byte)color;
     }
 
-    public void SetPixels(int x, int y, int[,] colors)
+    public void SetPixels(int x, int y, byte[,] colors)
     {
         var targetX = x;
         var targetY = y;
@@ -171,7 +171,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void HorizontalLine(int x1, int y, int x2, ColorName color)
     {
-        var c = (int)color;
+        var c = (byte)color;
 
         for (var x = x1; x <= x2; x++)
             _pixelMap[x, y] = c;
@@ -179,7 +179,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void VerticalLine(int x, ColorName color)
     {
-        var c = (int)color;
+        var c = (byte)color;
 
         for (var y = 0; y < PixelMatrixDefinition.Height; y++)
             _pixelMap[x, y] = c;
@@ -187,7 +187,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void VerticalLine(int x, int y1, int y2, ColorName color)
     {
-        var c = (int)color;
+        var c = (byte)color;
 
         for (var y = y1; y <= y2; y++)
             _pixelMap[x, y] = c;
@@ -195,7 +195,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void Box(ColorName color, int x1, int y1, int x2, int y2)
     {
-        var c = (int)color;
+        var c = (byte)color;
 
         for (var x = x1; x <= x2; x++)
         {
@@ -212,7 +212,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void PrintAt(ColorName color, int x, int y, string text)
     {
-        var c = (int)color;
+        var c = (byte)color;
 
         for (var i = 0; i < text.Length; i++)
         {
@@ -342,7 +342,7 @@ public partial class TerminalMatrixControl : UserControl
 
     private void TypeCharacter(char c)
     {
-        _characterMap[CursorPosition.X, CursorPosition.Y] = c;
+        _characterMap[CursorPosition.X, CursorPosition.Y] = (byte)c;
         _characterColorMap[CursorPosition.X, CursorPosition.Y] = CurrentCursorColor;
 
         if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
@@ -500,7 +500,7 @@ public partial class TerminalMatrixControl : UserControl
             TypedLine?.Invoke(this, eventArgs!);
     }
 
-    private void DoInsert(int[,] map, int empty)
+    private void DoInsert(byte[,] map, byte empty)
     {
         if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
         {
@@ -514,7 +514,7 @@ public partial class TerminalMatrixControl : UserControl
         map[CursorPosition.X, CursorPosition.Y] = empty;
     }
 
-    private void DoDelete(int[,] map, int empty)
+    private void DoDelete(byte[,] map, byte empty)
     {
         if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
         {
@@ -563,10 +563,10 @@ public partial class TerminalMatrixControl : UserControl
     private new void Scroll()
     {
         ScrollCharacterMap(_characterColorMap, 0);
-        ScrollCharacterMap(_characterMap, ' ');
+        ScrollCharacterMap(_characterMap, (byte)' ');
     }
 
-    private void ScrollCharacterMap(int[,] characterMap, int blank)
+    private void ScrollCharacterMap(byte[,] characterMap, byte blank)
     {
         for (var y = 1; y < CharacterMatrixDefinition.Height; y++)
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
@@ -593,7 +593,7 @@ public partial class TerminalMatrixControl : UserControl
         Invalidate();
     }
 
-    private void ClearLine(int[,] map, int y, int clear)
+    private void ClearLine(byte[,] map, int y, byte clear)
     {
         for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             map[x, y] = clear;
@@ -613,7 +613,7 @@ public partial class TerminalMatrixControl : UserControl
         {
             if (x >= CharacterMatrixDefinition.Width)
                 break;
-            _characterMap[x, y] = text[x];
+            _characterMap[x, y] = (byte)text[x];
         }
 
         UpdateBitmap();
@@ -629,7 +629,7 @@ public partial class TerminalMatrixControl : UserControl
             if (x >= CharacterMatrixDefinition.Width)
                 break;
 
-            _characterMap[x, y] = text[x];
+            _characterMap[x, y] = (byte)text[x];
         }
 
         CursorPosition.X = 0;

@@ -69,6 +69,15 @@ public partial class Form1 : Form
         {
             terminalMatrixControl1.WriteText("While the sun hangs in the sky and the desert has sand. While the waves crash in the sea and meet the land. While there's a wind and the stars and the rainbow. Till the mountains crumble into the plain.");
         }
+        else if (e.InputValue == "PALETTE")
+        {
+            terminalMatrixControl1.Clear();
+            terminalMatrixControl1.SetStartPosition(0, 10);
+            terminalMatrixControl1.SetLayerOrder(LayerOrder.GraphicsOverText);
+            var gif = terminalMatrixControl1.LoadPictureFromGif(@"..\..\..\..\extended_palette.gif");
+            terminalMatrixControl1.SetPixels(0, 0, gif);
+            terminalMatrixControl1.UpdateBitmap();
+        }
     }
 
     private void terminalMatrixControl1_InputCompleted(object sender, TerminalMatrix.Events.TypedLineEventArgs e)

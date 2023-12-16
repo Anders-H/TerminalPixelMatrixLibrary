@@ -1,6 +1,11 @@
 # TerminalPixelMatrixLibrary
 An 8-bit video interface emulator. Hope to make it good enough to replace the GUI code in our Altair BASIC emulator, [A-BASIC-Language](https://github.com/tomas-hakansson/A-BASIC-Language).
 Place the control on a Windows Forms-window and get events for what the user is typing, or call the `Input` function to prompt the user.
+[Nuget](https://www.nuget.org/packages/TerminalMatrix):
+
+```
+Install-Package TerminalMatrix
+```
 
 ## Limit text area
 

@@ -41,6 +41,7 @@
             terminalMatrixControl1.TabIndex = 0;
             terminalMatrixControl1.TypedLine += terminalMatrixControl1_TypedLine;
             terminalMatrixControl1.InputCompleted += terminalMatrixControl1_InputCompleted;
+            terminalMatrixControl1.UserBreak += terminalMatrixControl1_UserBreak;
             // 
             // Form1
             // 

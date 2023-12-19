@@ -14,6 +14,7 @@ public partial class TerminalMatrixControl : UserControl
 {
     public event TypedLineDelegate? TypedLine;
     public event InputCompletedDelegate? InputCompleted;
+    public event UserBreakDelegate? UserBreak;
 
     private readonly byte[,] _characterColorMap;
     private readonly byte[,] _characterMap;
@@ -374,6 +375,12 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
             }
 
+            return;
+        }
+
+        if (e is { KeyCode: Keys.C, Control: true })
+        {
+            UserBreak?.Invoke(this, e);
             return;
         }
 

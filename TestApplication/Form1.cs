@@ -1,4 +1,3 @@
-using TerminalMatrix;
 using TerminalMatrix.TerminalColor;
 
 namespace TestApplication;
@@ -91,5 +90,10 @@ public partial class Form1 : Form
     private void Form1_FormClosed(object sender, FormClosedEventArgs e)
     {
         terminalMatrixControl1.Quit();
+    }
+
+    private void terminalMatrixControl1_UserBreak(object sender, EventArgs e)
+    {
+        Text = "BREAK!!!";
     }
 }

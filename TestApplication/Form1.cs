@@ -21,7 +21,6 @@ public partial class Form1 : Form
             for (int i = 0; i < 300; i++)
                 terminalMatrixControl1.SetPixel(_rnd.Next(640), _rnd.Next(200), ColorName.Red);
 
-            terminalMatrixControl1.SetLayerOrder(LayerOrder.GraphicsOverText);
             terminalMatrixControl1.HorizontalLine(40, ColorName.Cyan);
             terminalMatrixControl1.HorizontalLine(10, 41, 630, ColorName.DarkGrey);
             terminalMatrixControl1.VerticalLine(40, ColorName.Green);
@@ -73,7 +72,6 @@ public partial class Form1 : Form
         {
             terminalMatrixControl1.Clear();
             terminalMatrixControl1.SetStartPosition(0, 10);
-            terminalMatrixControl1.SetLayerOrder(LayerOrder.GraphicsOverText);
             var gif = terminalMatrixControl1.LoadPictureFromGif(@"..\..\..\..\extended_palette.gif");
             terminalMatrixControl1.SetPixels(0, 0, gif);
             terminalMatrixControl1.UpdateBitmap();

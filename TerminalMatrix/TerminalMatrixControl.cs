@@ -1,5 +1,4 @@
-﻿using System.DirectoryServices.ActiveDirectory;
-using System.Drawing.Drawing2D;
+﻿using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.Runtime.InteropServices;
@@ -28,7 +27,6 @@ public partial class TerminalMatrixControl : UserControl
     private readonly Palette _palette;
     private TerminalState TerminalState { get; }
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
-    private LayerOrder _layerOrder;
     public bool QuitFlag { get; private set; }
     public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; }
@@ -48,7 +46,6 @@ public partial class TerminalMatrixControl : UserControl
         _palette = new Palette();
         TerminalState = new TerminalState();
         _keypressHandler = new TerminalMatrixKeypressHandler(this);
-        _layerOrder = LayerOrder.GraphicsOverText;
         CurrentCursorColor = (int)ColorName.White;
         _timer.Interval = 1000;
         QuitFlag = false;
@@ -61,13 +58,6 @@ public partial class TerminalMatrixControl : UserControl
         _timer.Tick += Blink;
         _timer.Enabled = true;
         Clear();
-    }
-
-    public void SetLayerOrder(LayerOrder layerOrder)
-    {
-        _layerOrder = layerOrder;
-        UpdateBitmap();
-        Invalidate();
     }
 
     /// <summary>
@@ -231,15 +221,12 @@ public partial class TerminalMatrixControl : UserControl
 
         var data = Bitmap.LockBits(new Rectangle(0, 0, PixelMatrixDefinition.Width, PixelMatrixDefinition.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
 
-        if (_layerOrder == LayerOrder.TextOverGraphics)
+        for (var y = 0; y < PixelMatrixDefinition.Height; y++)
         {
-            for (var y = 0; y < PixelMatrixDefinition.Height; y++)
+            for (var x = 0; x < PixelMatrixDefinition.Width; x++)
             {
-                for (var x = 0; x < PixelMatrixDefinition.Width; x++)
-                {
-                    var index = x + y * PixelMatrixDefinition.Width;
-                    _bitmap[index] = _palette.GetColor(_pixelMap[x, y]).ToArgb();
-                }
+                var index = x + y * PixelMatrixDefinition.Width;
+                _bitmap[index] = _palette.GetColor(_pixelMap[x, y]).ToArgb();
             }
         }
 
@@ -295,21 +282,6 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
-        if (_layerOrder == LayerOrder.GraphicsOverText)
-        {
-            for (var y = 0; y < PixelMatrixDefinition.Height; y++)
-            {
-                for (var x = 0; x < PixelMatrixDefinition.Width; x++)
-                {
-                    if (_pixelMap[x, y] > 0) // TODO: Perhaps transparent color should be a setting?
-                    {
-                        var index = x + y * PixelMatrixDefinition.Width;
-                        _bitmap[index] = _palette.GetColor(_pixelMap[x, y]).ToArgb();
-                    }
-                }
-            }
-        }
-
         Bitmap.UnlockBits(data);
         bitsHandle.Free();
         Invalidate();
@@ -330,6 +302,7 @@ public partial class TerminalMatrixControl : UserControl
         e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
         e.Graphics.InterpolationMode = InterpolationMode.Low; // This should be an option
         e.Graphics.SmoothingMode = SmoothingMode.HighSpeed;
+        e.Graphics.Clear(Color.Black);
         e.Graphics.DrawImage(Bitmap, 0, 0, Width, Height);
         base.OnPaint(e);
     }

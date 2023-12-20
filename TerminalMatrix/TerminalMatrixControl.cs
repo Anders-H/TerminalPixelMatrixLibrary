@@ -16,10 +16,10 @@ public partial class TerminalMatrixControl : UserControl
     public event InputCompletedDelegate? InputCompleted;
     public event UserBreakDelegate? UserBreak;
 
-    private readonly byte[,] _characterColorMap;
-    private readonly byte[,] _characterMap;
-    private readonly byte[,] _pixelMap;
-    private readonly int[] _bitmap;
+    private byte[,] _characterColorMap;
+    private byte[,] _characterMap;
+    private byte[,] _pixelMap;
+    private int[] _bitmap;
     private bool _cursorVisibleBlink;
     private readonly System.Windows.Forms.Timer _timer = new();
     private string _lastInput;
@@ -28,19 +28,18 @@ public partial class TerminalMatrixControl : UserControl
     private readonly Palette _palette;
     private TerminalState TerminalState { get; }
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
+    public Resolution Resolution { get; private set; }
     public bool QuitFlag { get; private set; }
     public Bitmap? Bitmap { get; private set; }
-    public Coordinate CursorPosition { get; }
+    public Coordinate CursorPosition { get; private set; }
     public byte CurrentCursorColor { get; set; }
     public ProgramLineDictionary ProgramLines { get; } = new();
 
+#pragma warning disable CS8618
     public TerminalMatrixControl()
+#pragma warning restore CS8618
     {
-        CursorPosition = new Coordinate(0, 0);
-        _characterColorMap = CharacterMatrixDefinition.Create();
-        _characterMap = CharacterMatrixDefinition.Create();
-        _pixelMap = PixelMatrixDefinition.Create();
-        _bitmap = PixelMatrixDefinition.CreateBitmap();
+        SetResolution(Resolution.Pixels320x200Characters40x25);
         _cursorVisibleBlink = false;
         _lastInput = "";
         _codePage = new TerminalCodePage();
@@ -58,7 +57,6 @@ public partial class TerminalMatrixControl : UserControl
         DoubleBuffered = true;
         _timer.Tick += Blink;
         _timer.Enabled = true;
-        Clear();
     }
 
     /// <summary>
@@ -81,6 +79,17 @@ public partial class TerminalMatrixControl : UserControl
     public void SetStartPosition(int x, int y)
     {
         CursorPosition.Set(x, y);
+    }
+
+    public void SetResolution(Resolution resolution)
+    {
+        Resolution = resolution;
+        CursorPosition = new Coordinate(0, 0);
+        _characterColorMap = CharacterMatrixDefinition.Create(Resolution);
+        _characterMap = CharacterMatrixDefinition.Create(Resolution);
+        _pixelMap = PixelMatrixDefinition.Create(Resolution);
+        _bitmap = PixelMatrixDefinition.CreateBitmap();
+        Clear();
     }
 
     private void Blink(object? sender, EventArgs e)
@@ -217,6 +226,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void UpdateBitmap()
     {
+        Bitmap?.Dispose();
         var bitsHandle = GCHandle.Alloc(_bitmap, GCHandleType.Pinned);
         Bitmap = new Bitmap(PixelMatrixDefinition.Width, PixelMatrixDefinition.Height, PixelMatrixDefinition.Width * 4, PixelFormat.Format32bppArgb, bitsHandle.AddrOfPinnedObject());
 

@@ -1,3 +1,5 @@
+using TerminalMatrix;
+using TerminalMatrix.Definitions;
 using TerminalMatrix.TerminalColor;
 
 namespace TestApplication;
@@ -18,10 +20,10 @@ public partial class Form1 : Form
         if (e.InputValue == "IA")
         {
             for (int i = 0; i < 300; i++)
-                terminalMatrixControl1.SetPixel(_rnd.Next(640), _rnd.Next(200), ColorName.Red);
+                terminalMatrixControl1.SetPixel(_rnd.Next(PixelMatrixDefinition.Width), _rnd.Next(PixelMatrixDefinition.Height), ColorName.Red);
 
             terminalMatrixControl1.HorizontalLine(40, ColorName.Cyan);
-            terminalMatrixControl1.HorizontalLine(10, 41, 630, ColorName.DarkGrey);
+            terminalMatrixControl1.HorizontalLine(10, 41, PixelMatrixDefinition.Width - 10, ColorName.DarkGrey);
             terminalMatrixControl1.VerticalLine(40, ColorName.Green);
             terminalMatrixControl1.VerticalLine(41, 10, 190, ColorName.White);
             terminalMatrixControl1.Box(ColorName.LightBlue, 43, 43, 63, 63);
@@ -75,6 +77,21 @@ public partial class Form1 : Form
             terminalMatrixControl1.SetPixels(0, 0, gif);
             terminalMatrixControl1.UpdateBitmap();
         }
+        else if (e.InputValue == "RES40")
+        {
+            terminalMatrixControl1.SetResolution(Resolution.Pixels320x200Characters40x25);
+            terminalMatrixControl1.UpdateBitmap();
+        }
+        else if (e.InputValue == "RES60")
+        {
+            terminalMatrixControl1.SetResolution(Resolution.Pixels480x200Characters60x25);
+            terminalMatrixControl1.UpdateBitmap();
+        }
+        else if (e.InputValue == "RES80")
+        {
+            terminalMatrixControl1.SetResolution(Resolution.Pixels640x200Characters80x25);
+            terminalMatrixControl1.UpdateBitmap();
+        }
     }
 
     private void terminalMatrixControl1_InputCompleted(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
@@ -84,7 +101,7 @@ public partial class Form1 : Form
 
     private void Form1_Load(object sender, EventArgs e)
     {
-        terminalMatrixControl1.WriteLine($"{new string(' ', 28)}*** A BASIC LANGUAGE ***");
+        terminalMatrixControl1.UpdateBitmap();
     }
 
     private void Form1_FormClosed(object sender, FormClosedEventArgs e)

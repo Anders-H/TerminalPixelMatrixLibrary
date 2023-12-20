@@ -1,3 +1,5 @@
+using TerminalMatrix;
+
 namespace SlideshowExample;
 
 public partial class MainWindow : Form
@@ -5,6 +7,11 @@ public partial class MainWindow : Form
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    private void MainWindow_Load(object sender, EventArgs e)
+    {
+        terminalMatrixControl1.SetResolution(Resolution.Pixels640x200Characters80x25);
     }
 
     private void MainWindow_Shown(object sender, EventArgs e)
@@ -18,7 +25,7 @@ public partial class MainWindow : Form
             images.Add(terminalMatrixControl1.LoadPictureFromGif($@"..\..\..\slideshow{i}.gif"));
 
         var quitFlag = false;
-        
+
         do
         {
             for (var i = 1; i <= images.Count; i++)

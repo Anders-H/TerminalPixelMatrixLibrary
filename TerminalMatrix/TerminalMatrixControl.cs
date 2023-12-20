@@ -226,6 +226,9 @@ public partial class TerminalMatrixControl : UserControl
 
     public void UpdateBitmap()
     {
+        if (QuitFlag)
+            return;
+
         Bitmap?.Dispose();
         var bitsHandle = GCHandle.Alloc(_bitmap, GCHandleType.Pinned);
         Bitmap = new Bitmap(PixelMatrixDefinition.Width, PixelMatrixDefinition.Height, PixelMatrixDefinition.Width * 4, PixelFormat.Format32bppArgb, bitsHandle.AddrOfPinnedObject());
@@ -631,6 +634,7 @@ public partial class TerminalMatrixControl : UserControl
                 break;
 
             _characterMap[x, y] = (byte)text[x];
+            _characterColorMap[x, y] = CurrentCursorColor;
         }
 
         CursorPosition.X = 0;
@@ -650,6 +654,9 @@ public partial class TerminalMatrixControl : UserControl
 
         do
         {
+            if (QuitFlag)
+                return "";
+
             Thread.Yield();
             Thread.Sleep(2);
             Application.DoEvents();

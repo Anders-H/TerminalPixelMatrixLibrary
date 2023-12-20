@@ -49,6 +49,7 @@
             Name = "MainWindow";
             Text = "Slideshow";
             FormClosed += MainWindow_FormClosed;
+            Load += MainWindow_Load;
             Shown += MainWindow_Shown;
             ResumeLayout(false);
         }

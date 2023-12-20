@@ -49,6 +49,7 @@
             Name = "MainWindow";
             Text = "Adventure!";
             FormClosed += MainWindow_FormClosed;
+            Load += MainWindow_Load;
             Shown += MainWindow_Shown;
             ResumeLayout(false);
         }

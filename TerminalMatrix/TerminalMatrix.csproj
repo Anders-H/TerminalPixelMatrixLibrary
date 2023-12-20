@@ -21,6 +21,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Include="..\..\Just_the_render_engine_for_my_personal_website\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	  <None Include="..\terminal.png">
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>

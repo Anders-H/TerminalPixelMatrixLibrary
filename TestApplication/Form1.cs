@@ -38,7 +38,12 @@ public partial class Form1 : Form
         }
         else if (e.InputValue == "INLINE INPUT")
         {
-            var response = terminalMatrixControl1.Input("What now? ");
+            var response = terminalMatrixControl1.Input("What now? ", (int)ColorName.Red, (int)ColorName.LightBlue);
+            terminalMatrixControl1.WriteLine($"You say: {response}");
+        }
+        else if (e.InputValue == "INLINE INPUT WITH DEFAULT")
+        {
+            var response = terminalMatrixControl1.Input("What now? ", "I am a default value", (int)ColorName.Blue, (int)ColorName.Violet);
             terminalMatrixControl1.WriteLine($"You say: {response}");
         }
         else if (e.InputValue == "LIST")
@@ -101,6 +106,8 @@ public partial class Form1 : Form
 
     private void Form1_Load(object sender, EventArgs e)
     {
+        terminalMatrixControl1.BorderWidth = 10;
+        terminalMatrixControl1.BorderHeight = 10;
         terminalMatrixControl1.UpdateBitmap();
     }
 
@@ -112,5 +119,15 @@ public partial class Form1 : Form
     private void terminalMatrixControl1_UserBreak(object sender, EventArgs e)
     {
         Text = "BREAK!!!";
+    }
+
+    private void terminalMatrixControl1_RequestToggleFullscreen(object sender, EventArgs e)
+    {
+        Text = "Toggle fullscreen!!!";
+    }
+
+    private void terminalMatrixControl1_FunctionKeyPressed(object sender, TerminalMatrix.Events.FunctionKeyEventArgs e)
+    {
+        Text = "Function key: " + e.Key;
     }
 }

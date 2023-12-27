@@ -12,6 +12,8 @@ public partial class MainWindow : Form
     private void MainWindow_Load(object sender, EventArgs e)
     {
         terminalMatrixControl1.SetResolution(Resolution.Pixels640x200Characters80x25);
+        terminalMatrixControl1.BorderWidth = 10;
+        terminalMatrixControl1.BorderHeight = 10;
     }
 
     private void MainWindow_Shown(object sender, EventArgs e)

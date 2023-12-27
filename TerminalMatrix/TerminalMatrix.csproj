@@ -8,20 +8,20 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>1.5</Version>
+		<Version>1.6</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>1.5</AssemblyVersion>
-		<FileVersion>1.5</FileVersion>
+		<AssemblyVersion>1.6</AssemblyVersion>
+		<FileVersion>1.6</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>terminal.png</PackageIcon>
-		<PackageReleaseNotes>Added support for wordwrapping..</PackageReleaseNotes>
+		<PackageReleaseNotes>Multiple resolution and border support.</PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/Anders-H/TerminalPixelMatrixLibrary</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <None Include="..\..\Just_the_render_engine_for_my_personal_website\README.md">
+	  <None Include="..\README.md">
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
 	  </None>

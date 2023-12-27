@@ -15,6 +15,8 @@ public partial class TerminalMatrixControl : UserControl
     public event TypedLineDelegate? TypedLine;
     public event InputCompletedDelegate? InputCompleted;
     public event UserBreakDelegate? UserBreak;
+    public event RequestToggleFullscreenDelegate? RequestToggleFullscreen;
+    public event FunctionKeyPressedDelegate? FunctionKeyPressed;
 
     private byte[,] _characterColorMap;
     private byte[,] _characterMap;
@@ -34,6 +36,14 @@ public partial class TerminalMatrixControl : UserControl
     public Coordinate CursorPosition { get; private set; }
     public byte CurrentCursorColor { get; set; }
     public ProgramLineDictionary ProgramLines { get; } = new();
+    /// <summary>
+    /// The width of the border in physical pixels.
+    /// </summary>
+    public int BorderWidth { get; set; }
+    /// <summary>
+    /// The height of the border in physical pixels.
+    /// </summary>
+    public int BorderHeight { get; set; }
 
 #pragma warning disable CS8618
     public TerminalMatrixControl()
@@ -312,12 +322,18 @@ public partial class TerminalMatrixControl : UserControl
         if (Bitmap == null)
             return;
 
+        var doubleWidth = BorderWidth + BorderWidth;
+        var doubleHeight = BorderHeight + BorderHeight;
+
+        if (Width < 5 + doubleWidth || Height < 5 + doubleHeight)
+            return;
+
         e.Graphics.CompositingMode = CompositingMode.SourceCopy;
         e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
-        e.Graphics.InterpolationMode = InterpolationMode.Low; // This should be an option
-        e.Graphics.SmoothingMode = SmoothingMode.HighSpeed;
+        e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+        e.Graphics.SmoothingMode = SmoothingMode.None;
         e.Graphics.Clear(Color.Black);
-        e.Graphics.DrawImage(Bitmap, 0, 0, Width, Height);
+        e.Graphics.DrawImage(Bitmap, BorderWidth, BorderHeight, Width - doubleWidth, Height - doubleHeight);
         base.OnPaint(e);
     }
 
@@ -399,6 +415,39 @@ public partial class TerminalMatrixControl : UserControl
 
         switch (e.KeyData)
         {
+            case Keys.F1:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F1));
+                break;
+            case Keys.F2:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F2));
+                break;
+            case Keys.F3:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F3));
+                break;
+            case Keys.F4:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F4));
+                break;
+            case Keys.F5:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F5));
+                break;
+            case Keys.F6:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F6));
+                break;
+            case Keys.F7:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F7));
+                break;
+            case Keys.F8:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F8));
+                break;
+            case Keys.F9:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F9));
+                break;
+            case Keys.F10:
+                FunctionKeyPressed?.Invoke(this, new FunctionKeyEventArgs(FunctionKey.F10));
+                break;
+            case Keys.F11:
+                RequestToggleFullscreen?.Invoke(this, e);
+                break;
             case Keys.PageUp:
 
                 if (TerminalState.InputMode)
@@ -582,16 +631,40 @@ public partial class TerminalMatrixControl : UserControl
             characterMap[x, last] = blank;
     }
 
-    public void BeginInput(string prompt)
+    public void BeginInput(string prompt) =>
+        BeginInput(prompt, "", CurrentCursorColor, CurrentCursorColor);
+
+    public void BeginInput(string prompt, string defaultValue) =>
+        BeginInput(prompt, defaultValue, CurrentCursorColor, CurrentCursorColor);
+
+    public void BeginInput(string prompt, byte promptColor, byte valueColor) =>
+        BeginInput(prompt, "", CurrentCursorColor, CurrentCursorColor);
+
+    public void BeginInput(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
         if (prompt.Length > CharacterMatrixDefinition.Width - 2)
             prompt = prompt.Substring(0, CharacterMatrixDefinition.Width - 2);
 
         ClearLine(_characterMap, CursorPosition.Y, CharacterMatrixDefinition.CharacterEmpty);
         ClearLine(_characterColorMap, CursorPosition.Y, CurrentCursorColor);
+        CurrentCursorColor = promptColor;
         Write(prompt);
+        CurrentCursorColor = valueColor;
         TerminalState.InputStartX = prompt.Length;
-        CursorPosition.X = TerminalState.InputStartX;
+        Write(TerminalState.InputStartX, defaultValue);
+
+        if (prompt.Length == 0)
+        {
+            CursorPosition.X = TerminalState.InputStartX;
+        }
+        else
+        {
+            CursorPosition.X = TerminalState.InputStartX + defaultValue.Length;
+
+            if (CursorPosition.X > CharacterMatrixDefinition.Width - 1)
+                CursorPosition.X = CharacterMatrixDefinition.Width - 1;
+        }
+
         TerminalState.InputMode = true;
         UpdateBitmap();
         Invalidate();
@@ -609,15 +682,19 @@ public partial class TerminalMatrixControl : UserControl
             WriteLine(programLine.Value.RawString);
     }
 
-    public void Write(string text)
+    public void Write(string text) =>
+        Write(0, text);
+
+    public void Write(int xStart, string text)
     {
         var y = CursorPosition.Y;
 
         for (var x = 0; x < text.Length; x++)
         {
-            if (x >= CharacterMatrixDefinition.Width)
+            if (x + xStart >= CharacterMatrixDefinition.Width)
                 break;
-            _characterMap[x, y] = (byte)text[x];
+            _characterMap[x + xStart, y] = (byte)text[x];
+            _characterColorMap[x + xStart, y] = CurrentCursorColor;
         }
 
         UpdateBitmap();
@@ -648,9 +725,18 @@ public partial class TerminalMatrixControl : UserControl
         Invalidate();
     }
 
-    public string Input(string prompt)
+    public string Input(string prompt) =>
+        Input(prompt, "", CurrentCursorColor, CurrentCursorColor);
+
+    public string Input(string prompt, string defaultValue) =>
+        Input(prompt, defaultValue, CurrentCursorColor, CurrentCursorColor);
+
+    public string Input(string prompt, byte promptColor, byte valueColor) =>
+        Input(prompt, "", CurrentCursorColor, CurrentCursorColor);
+
+    public string Input(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
-        BeginInput(prompt);
+        BeginInput(prompt, defaultValue, promptColor, valueColor);
 
         do
         {

@@ -1,4 +1,5 @@
-﻿using TerminalMatrix.Definitions;
+﻿using PixelmapLibrary.FontManagement;
+using TerminalMatrix.Definitions;
 
 namespace TerminalMatrix;
 

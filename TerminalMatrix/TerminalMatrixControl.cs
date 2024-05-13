@@ -1,9 +1,11 @@
-﻿using System.Drawing.Drawing2D;
-using System.Drawing.Imaging;
+﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Globalization;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using PixelmapLibrary;
+using PixelmapLibrary.FontManagement;
+using PixelmapLibrary.SpriteManagement;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.Events;
 using TerminalMatrix.TerminalColor;
@@ -20,19 +22,19 @@ public partial class TerminalMatrixControl : UserControl
 
     private byte[,] _characterColorMap;
     private byte[,] _characterMap;
-    private byte[,] _pixelMap;
-    private int[] _bitmap;
+    private Pixelmap _pixelMap;
+    private Bitmap _fastBitmap;
     private bool _cursorVisibleBlink;
     private readonly System.Windows.Forms.Timer _timer = new();
     private string _lastInput;
-    private readonly TerminalFont _font = new();
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;
     private TerminalState TerminalState { get; }
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
+    private readonly FontMonochromeSprite _fontMonochromeSprite;
+
     public Resolution Resolution { get; private set; }
     public bool QuitFlag { get; private set; }
-    public Bitmap? Bitmap { get; private set; }
     public Coordinate CursorPosition { get; private set; }
     public byte CurrentCursorColor { get; set; }
     public ProgramLineDictionary ProgramLines { get; } = new();
@@ -49,7 +51,9 @@ public partial class TerminalMatrixControl : UserControl
     public TerminalMatrixControl()
 #pragma warning restore CS8618
     {
-        SetResolution(Resolution.Pixels320x200Characters40x25);
+        _fontMonochromeSprite = FontMonochromeSprite.Create();
+        _fastBitmap = Pixelmap.CreateCompatibleBitmap(320, 200);
+        SetResolution(Resolution.Pixels320x200Characters40x25, _fastBitmap);
         _cursorVisibleBlink = false;
         _lastInput = "";
         _codePage = new TerminalCodePage();
@@ -91,15 +95,50 @@ public partial class TerminalMatrixControl : UserControl
         CursorPosition.Set(x, y);
     }
 
+    public void SetResolution(Resolution resolution, Bitmap bitmap)
+    {
+        Resolution = resolution;
+        CursorPosition = new Coordinate(0, 0);
+        _characterColorMap = CharacterMatrixDefinition.Create(Resolution);
+        _characterMap = CharacterMatrixDefinition.Create(Resolution);
+        _pixelMap = new Pixelmap(bitmap);
+
+        try
+        {
+            _fastBitmap?.Dispose();
+        }
+        catch
+        {
+            // ignored
+        }
+
+        _fastBitmap = Pixelmap.CreateCompatibleBitmap(_pixelMap.Width, _pixelMap.Height);
+        _pixelMap.LockBits();
+        Clear();
+        _pixelMap.UnlockBits();
+    }
+
     public void SetResolution(Resolution resolution)
     {
         Resolution = resolution;
         CursorPosition = new Coordinate(0, 0);
         _characterColorMap = CharacterMatrixDefinition.Create(Resolution);
         _characterMap = CharacterMatrixDefinition.Create(Resolution);
-        _pixelMap = PixelMatrixDefinition.Create(Resolution);
-        _bitmap = PixelMatrixDefinition.CreateBitmap();
+
+        try
+        {
+            _fastBitmap?.Dispose();
+        }
+        catch
+        {
+            // ignored
+        }
+
+        _fastBitmap = Pixelmap.CreateCompatibleBitmap(_pixelMap.Width, _pixelMap.Height);
+        _pixelMap = new Pixelmap(_fastBitmap);
+        _pixelMap.LockBits();
         Clear();
+        _pixelMap.UnlockBits();
     }
 
     private void Blink(object? sender, EventArgs e)
@@ -127,7 +166,7 @@ public partial class TerminalMatrixControl : UserControl
     {
         for (var y = 0; y < PixelMatrixDefinition.Height; y++)
             for (var x = 0; x < PixelMatrixDefinition.Width; x++)
-                _pixelMap[x, y] = 0;
+                _pixelMap.SetPixel(x, y, 0, 0, 0);
     }
 
     public void Clear()
@@ -139,10 +178,8 @@ public partial class TerminalMatrixControl : UserControl
 
     public void HorizontalLine(int y, ColorName color)
     {
-        var c = (byte)color;
-
         for (var x = 0; x < PixelMatrixDefinition.Width; x++)
-            _pixelMap[x, y] = c;
+            _pixelMap.RangeSafeSetPixel(x, y, _palette.GetColor(color));
     }
 
     public byte[,] LoadPictureFromGif(string filename)
@@ -157,10 +194,8 @@ public partial class TerminalMatrixControl : UserControl
         return result;
     }
 
-    public void SetPixel(int x, int y, ColorName color)
-    {
-        _pixelMap[x, y] = (byte)color;
-    }
+    public void SetPixel(int x, int y, ColorName color) =>
+        _pixelMap.SetPixel(x, y, _palette.GetColor(color));
 
     public void SetPixels(int x, int y, byte[,] colors)
     {
@@ -171,8 +206,8 @@ public partial class TerminalMatrixControl : UserControl
         {
             for (var sourceX = 0; sourceX < colors.GetLength(0); sourceX++)
             {
-                if (targetX >= 0 && targetX < PixelMatrixDefinition.Width && targetY >= 0 && targetY < PixelMatrixDefinition.Height)
-                    _pixelMap[targetX, targetY] = colors[sourceX, sourceY];
+                if (targetX >= 0 && targetX < PixelMatrixDefinition.Width && targetY is >= 0 and < PixelMatrixDefinition.Height)
+                    _pixelMap.SetPixel(targetX, targetY, _palette.GetColor(colors[sourceX, sourceY]));
 
                 targetX++;
             }
@@ -187,7 +222,7 @@ public partial class TerminalMatrixControl : UserControl
         var c = (byte)color;
 
         for (var x = x1; x <= x2; x++)
-            _pixelMap[x, y] = c;
+            _pixelMap.SetPixel(x, y, _palette.GetColor(c));
     }
 
     public void VerticalLine(int x, ColorName color)
@@ -195,7 +230,7 @@ public partial class TerminalMatrixControl : UserControl
         var c = (byte)color;
 
         for (var y = 0; y < PixelMatrixDefinition.Height; y++)
-            _pixelMap[x, y] = c;
+            _pixelMap.SetPixel(x, y, _palette.GetColor(c));
     }
 
     public void VerticalLine(int x, int y1, int y2, ColorName color)
@@ -203,7 +238,7 @@ public partial class TerminalMatrixControl : UserControl
         var c = (byte)color;
 
         for (var y = y1; y <= y2; y++)
-            _pixelMap[x, y] = c;
+            _pixelMap.SetPixel(x, y, _palette.GetColor(c));
     }
 
     public void Box(ColorName color, int x1, int y1, int x2, int y2)
@@ -212,14 +247,14 @@ public partial class TerminalMatrixControl : UserControl
 
         for (var x = x1; x <= x2; x++)
         {
-            _pixelMap[x, y1] = c;
-            _pixelMap[x, y2] = c;
+            _pixelMap.SetPixel(x, y1, _palette.GetColor(c));
+            _pixelMap.SetPixel(x, y2, _palette.GetColor(c));
         }
 
         for (var y = y1 + 1; y < y2; y++)
         {
-            _pixelMap[x1, y] = c;
-            _pixelMap[x2, y] = c;
+            _pixelMap.SetPixel(x1, y, _palette.GetColor(c));
+            _pixelMap.SetPixel(x2, y, _palette.GetColor(c));
         }
     }
 
@@ -239,28 +274,12 @@ public partial class TerminalMatrixControl : UserControl
         if (QuitFlag)
             return;
 
-        Bitmap?.Dispose();
-        var bitsHandle = GCHandle.Alloc(_bitmap, GCHandleType.Pinned);
-        Bitmap = new Bitmap(PixelMatrixDefinition.Width, PixelMatrixDefinition.Height, PixelMatrixDefinition.Width * 4, PixelFormat.Format32bppArgb, bitsHandle.AddrOfPinnedObject());
-
-        var data = Bitmap.LockBits(new Rectangle(0, 0, PixelMatrixDefinition.Width, PixelMatrixDefinition.Height), ImageLockMode.ReadWrite, PixelFormat.Format32bppArgb);
-
-        for (var y = 0; y < PixelMatrixDefinition.Height; y++)
-        {
-            for (var x = 0; x < PixelMatrixDefinition.Width; x++)
-            {
-                var index = x + y * PixelMatrixDefinition.Width;
-                _bitmap[index] = _palette.GetColor(_pixelMap[x, y]).ToArgb();
-            }
-        }
+        _pixelMap.LockBits();
 
         for (var y = CharacterMatrixDefinition.TextRenderLimit; y < CharacterMatrixDefinition.Height; y++)
         {
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             {
-                var characterFont = _font[_characterMap[x, y]];
-                var c = _palette.GetColor(_characterColorMap[x, y]).ToArgb();
-                var cursCol = _palette.GetColor(CurrentCursorColor).ToArgb();
                 var pixelStart = new Coordinate(x * 8, y * 8);
                 var source = new Coordinate(0, 0);
 
@@ -270,13 +289,14 @@ public partial class TerminalMatrixControl : UserControl
                     {
                         for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
                         {
-
                             var index = pixelX + pixelY * PixelMatrixDefinition.Width;
+                            _fontMonochromeSprite.Draw(_pixelMap, 'A', pixelStart.X, pixelStart.Y, Color.White);
 
-                            if (_cursorVisibleBlink)
-                                _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? c : 0;
-                            else
-                                _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? 0 : cursCol;
+
+                            //if (_cursorVisibleBlink)
+                            //    _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? c : 0;
+                            //else
+                            //    _bitmap[index] = characterFont.Pixels[source.X, source.Y] ? 0 : cursCol;
 
                             source.X++;
                         }
@@ -291,11 +311,11 @@ public partial class TerminalMatrixControl : UserControl
                         for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
                         {
                             var index = pixelX + pixelY * PixelMatrixDefinition.Width;
-
-                            if (characterFont.Pixels[source.X, source.Y])
-                                _bitmap[index] = c;
-                            else
-                                _bitmap[index] = _palette.GetColor(_pixelMap[pixelX, pixelY]).ToArgb();
+                            _fontMonochromeSprite.Draw(_pixelMap, 'A', pixelStart.X, pixelStart.Y, Color.White);
+                            //if (characterFont.Pixels[source.X, source.Y])
+                            //    _bitmap[index] = c;
+                            //else
+                            //    _bitmap[index] = _pixelMap.GetPixel(pixelX, pixelY).ToArgb();
 
                             source.X++;
                         }
@@ -306,8 +326,7 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
-        Bitmap.UnlockBits(data);
-        bitsHandle.Free();
+        _pixelMap.UnlockBits();
         Invalidate();
     }
 
@@ -319,7 +338,7 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnPaint(PaintEventArgs e)
     {
-        if (Bitmap == null)
+        if (_pixelMap == null!)
             return;
 
         var doubleWidth = BorderWidth + BorderWidth;
@@ -333,7 +352,7 @@ public partial class TerminalMatrixControl : UserControl
         e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
         e.Graphics.SmoothingMode = SmoothingMode.None;
         e.Graphics.Clear(Color.Black);
-        e.Graphics.DrawImage(Bitmap, BorderWidth, BorderHeight, Width - doubleWidth, Height - doubleHeight);
+        e.Graphics.DrawImage(_fastBitmap, BorderWidth, BorderHeight, Width - doubleWidth, Height - doubleHeight);
         base.OnPaint(e);
     }
 
@@ -579,6 +598,11 @@ public partial class TerminalMatrixControl : UserControl
             map[x, CursorPosition.Y] = map[x + 1, CursorPosition.Y];
 
         map[CharacterMatrixDefinition.Width - 1, CursorPosition.Y] = empty;
+    }
+
+    public void SetProgramLines(string code)
+    {
+        // TODO
     }
 
     private bool AddProgramLine(string value, bool shift)

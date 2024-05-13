@@ -7,6 +7,10 @@ Place the control on a Windows Forms-window and get events for what the user is 
 Install-Package TerminalMatrix
 ```
 
+## Basic functionality
+
+For adding text to the terminal matrix, use the `WriteLine` method. To prompt the user, use the `Input` method.
+
 ## Limit text area
 
 When the text area is unlimited, the text terminal displays 25 lines of text.
@@ -39,7 +43,7 @@ The image is a screenshot of the AdventureGameExample projet, a text adventure g
 
 ## Limitations
 
-For a clean exit, you must call the Quit method in the FormClosed event handler.
+For a clean exit, you must call the `Quit` method in the `FormClosed` event handler.
 
 ```
 private void Form1_FormClosed(object sender, FormClosedEventArgs e)

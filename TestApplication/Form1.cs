@@ -1,3 +1,4 @@
+using PixelmapLibrary;
 using TerminalMatrix;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.TerminalColor;
@@ -82,6 +83,11 @@ public partial class Form1 : Form
             terminalMatrixControl1.SetPixels(0, 0, gif);
             terminalMatrixControl1.UpdateBitmap();
         }
+        else if (e.InputValue == "RES20")
+        {
+            terminalMatrixControl1.SetResolution(Resolution.Pixels160x200Characters20x25);
+            terminalMatrixControl1.UpdateBitmap();
+        }
         else if (e.InputValue == "RES40")
         {
             terminalMatrixControl1.SetResolution(Resolution.Pixels320x200Characters40x25);
@@ -109,6 +115,8 @@ public partial class Form1 : Form
         terminalMatrixControl1.BorderWidth = 10;
         terminalMatrixControl1.BorderHeight = 10;
         terminalMatrixControl1.UpdateBitmap();
+        terminalMatrixControl1.SetProgramLines(@"10 print ""hello""
+20 goto 10");
     }
 
     private void Form1_FormClosed(object sender, FormClosedEventArgs e)

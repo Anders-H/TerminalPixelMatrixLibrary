@@ -8,14 +8,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>1.6</Version>
+		<Version>1.7</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>1.6</AssemblyVersion>
-		<FileVersion>1.6</FileVersion>
+		<AssemblyVersion>1.7</AssemblyVersion>
+		<FileVersion>1.7</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>terminal.png</PackageIcon>
-		<PackageReleaseNotes>Multiple resolution and border support.</PackageReleaseNotes>
+		<PackageReleaseNotes>Function keys (F1-F10) and detection of request full screen (F11).</PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/Anders-H/TerminalPixelMatrixLibrary</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
@@ -29,6 +29,10 @@
 	    <Pack>True</Pack>
 	    <PackagePath>\</PackagePath>
 	  </None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="PixelmapLibrary" Version="1.0.0" />
 	</ItemGroup>
 
 </Project>

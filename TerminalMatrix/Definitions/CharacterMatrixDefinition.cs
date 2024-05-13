@@ -26,6 +26,9 @@ public static class CharacterMatrixDefinition
             case Resolution.Pixels320x200Characters40x25:
                 Width = 40;
                 break;
+            case Resolution.Pixels160x200Characters20x25:
+                Width = 20;
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null);
         }

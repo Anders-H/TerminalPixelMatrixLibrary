@@ -22,7 +22,7 @@ public partial class TerminalMatrixControl : UserControl
     private byte[,] _characterColorMap;
     private byte[,] _characterMap;
     private Pixelmap _pixelMap;
-    private Bitmap _fastBitmap;
+    private Bitmap? _fastBitmap;
     private bool _cursorVisibleBlink;
     private readonly System.Windows.Forms.Timer _timer = new();
     private string _lastInput;
@@ -31,20 +31,19 @@ public partial class TerminalMatrixControl : UserControl
     private TerminalState TerminalState { get; }
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
     private readonly FontMonochromeSprite _fontMonochromeSprite;
+    private int _borderWidth;
+    private int _borderHeight;
+    private int _pixelWidthWithBorder;
+    private int _pixelHeightWithBorder;
+    private int _pixelWidthWithoutBorder;
+    private int _pixelHeightWithoutBorder;
 
+    public RenderingMode RenderingMode { get; set; }
     public Resolution Resolution { get; private set; }
     public bool QuitFlag { get; private set; }
     public Coordinate CursorPosition { get; private set; }
     public byte CurrentCursorColor { get; set; }
     public ProgramLineDictionary ProgramLines { get; } = new();
-    /// <summary>
-    /// The width of the border in physical pixels.
-    /// </summary>
-    public int BorderWidth { get; set; }
-    /// <summary>
-    /// The height of the border in physical pixels.
-    /// </summary>
-    public int BorderHeight { get; set; }
 
 #pragma warning disable CS8618
     public TerminalMatrixControl()
@@ -63,6 +62,38 @@ public partial class TerminalMatrixControl : UserControl
         InitializeComponent();
     }
 
+    /// <summary>
+    /// The width of the border in physical pixels.
+    /// </summary>
+    public int BorderWidth
+    {
+        get => _borderWidth;
+        set
+        {
+            _borderWidth = value;
+            var resolutionWithoutBorder = ResolutionHelper.GetPixelSize(Resolution, 0, 0);
+            var resolutionWithBorder = ResolutionHelper.GetPixelSize(Resolution, _borderWidth, _borderHeight);
+            _pixelWidthWithoutBorder = resolutionWithoutBorder.Width;
+            _pixelWidthWithBorder = resolutionWithBorder.Width;
+        }
+    }
+
+    /// <summary>
+    /// The height of the border in physical pixels.
+    /// </summary>
+    public int BorderHeight
+    {
+        get => _borderHeight;
+        set
+        {
+            _borderHeight = value;
+            var resolutionWithoutBorder = ResolutionHelper.GetPixelSize(Resolution, 0, 0);
+            var resolutionWithBorder = ResolutionHelper.GetPixelSize(Resolution, _borderWidth, _borderHeight);
+            _pixelHeightWithoutBorder = resolutionWithoutBorder.Height;
+            _pixelHeightWithBorder = resolutionWithBorder.Height;
+        }
+    }
+
     private void UserControl1_Load(object sender, EventArgs e)
     {
         DoubleBuffered = true;
@@ -77,7 +108,7 @@ public partial class TerminalMatrixControl : UserControl
     /// <param name="limit">0 (default, all lines are visible) to 23 (only the bottom two lines are visible)</param>
     public void SetTextRenderLimit(int limit)
     {
-        if (limit < 0 || limit > 23)
+        if (limit < 0 || limit > 23) // TODO: What is the correct number here?
             throw new ArgumentOutOfRangeException(nameof(limit));
 
         if (CursorPosition.Y < limit)
@@ -109,7 +140,7 @@ public partial class TerminalMatrixControl : UserControl
             // ignored
         }
 
-        var size = ResolutionHelper.GetPixelSize(resolution);
+        var size = ResolutionHelper.GetPixelSize(resolution, BorderWidth, BorderHeight);
         _fastBitmap = Pixelmap.CreateCompatibleBitmap(size.Width, size.Height);
         _pixelMap = new Pixelmap(_fastBitmap);
         _pixelMap.LockBits();
@@ -119,7 +150,6 @@ public partial class TerminalMatrixControl : UserControl
 
     private void Blink(object? sender, EventArgs e)
     {
-        System.Diagnostics.Debug.WriteLine("Blink");
         _cursorVisibleBlink = !_cursorVisibleBlink;
         UpdateBitmap();
         Invalidate();
@@ -183,7 +213,7 @@ public partial class TerminalMatrixControl : UserControl
         {
             for (var sourceX = 0; sourceX < colors.GetLength(0); sourceX++)
             {
-                if (targetX >= 0 && targetX < PixelMatrixDefinition.Width && targetY is >= 0 and < PixelMatrixDefinition.Height)
+                if (targetX >= 0 && targetX < PixelMatrixDefinition.Width && targetY >= 0 && targetY < PixelMatrixDefinition.Height)
                     _pixelMap.SetPixel(targetX, targetY, _palette.GetColor(colors[sourceX, sourceY]));
 
                 targetX++;
@@ -261,30 +291,14 @@ public partial class TerminalMatrixControl : UserControl
 
                 if (CursorPosition.IsSame(x, y))
                 {
-                    for (var pixelY = pixelStart.Y; pixelY < pixelStart.Y + 8; pixelY++)
-                    {
-                        for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
-                        {
-                            if (_cursorVisibleBlink)
-                                _fontMonochromeSprite.DrawOpaque(_pixelMap, 'A', pixelStart.X, pixelStart.Y, _palette.GetColor(CurrentCursorColor), Color.Black);
-                            else
-                                _fontMonochromeSprite.DrawOpaque(_pixelMap, 'A', pixelStart.X, pixelStart.Y, Color.Black, _palette.GetColor(CurrentCursorColor));
-                        }
-                    }
+                    if (_cursorVisibleBlink)
+                        _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(CurrentCursorColor), Color.Black);
+                    else
+                        _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, Color.Black, _palette.GetColor(CurrentCursorColor));
                 }
                 else if (_characterMap[x, y] > 0)
                 {
-                    for (var pixelY = pixelStart.Y; pixelY < pixelStart.Y + 8; pixelY++)
-                    {
-                        for (var pixelX = pixelStart.X; pixelX < pixelStart.X + 8; pixelX++)
-                        {
-                            _fontMonochromeSprite.Draw(_pixelMap, 'A', pixelStart.X, pixelStart.Y, Color.White);
-                            //if (characterFont.Pixels[source.X, source.Y])
-                            //    _bitmap[index] = c;
-                            //else
-                            //    _bitmap[index] = _pixelMap.GetPixel(pixelX, pixelY).ToArgb();
-                        }
-                    }
+                    _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(_characterColorMap[x, y]), Color.Black);
                 }
             }
         }
@@ -304,18 +318,29 @@ public partial class TerminalMatrixControl : UserControl
         if (_pixelMap == null!)
             return;
 
-        var doubleWidth = BorderWidth + BorderWidth;
-        var doubleHeight = BorderHeight + BorderHeight;
+        switch (RenderingMode)
+        {
+            case RenderingMode.HighSpeed:
+                e.Graphics.CompositingMode = CompositingMode.SourceCopy;
+                e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
+                e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
+                e.Graphics.SmoothingMode = SmoothingMode.None;
+                break;
+            case RenderingMode.HighQuality:
+                e.Graphics.CompositingMode = CompositingMode.SourceCopy;
+                e.Graphics.CompositingQuality = CompositingQuality.HighQuality;
+                e.Graphics.InterpolationMode = InterpolationMode.HighQualityBilinear;
+                e.Graphics.SmoothingMode = SmoothingMode.HighQuality;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
 
-        if (Width < 5 + doubleWidth || Height < 5 + doubleHeight)
-            return;
-
-        e.Graphics.CompositingMode = CompositingMode.SourceCopy;
-        e.Graphics.CompositingQuality = CompositingQuality.HighSpeed;
-        e.Graphics.InterpolationMode = InterpolationMode.NearestNeighbor;
-        e.Graphics.SmoothingMode = SmoothingMode.None;
         e.Graphics.Clear(Color.Black);
-        e.Graphics.DrawImage(_fastBitmap, BorderWidth, BorderHeight, Width - doubleWidth, Height - doubleHeight);
+
+        if (_fastBitmap != null)
+            e.Graphics.DrawImage(_fastBitmap, 0, 0, Width, Height);
+
         base.OnPaint(e);
     }
 
@@ -489,7 +514,11 @@ public partial class TerminalMatrixControl : UserControl
         var start = TerminalState.InputMode ? TerminalState.InputStartX : 0;
 
         for (var x = start; x < CharacterMatrixDefinition.Width; x++)
-            inputValue.Append(_codePage.Chr[_characterMap[x, CursorPosition.Y]]);
+        {
+            var c = _characterMap[x, CursorPosition.Y];
+            if (c != 0)
+                inputValue.Append(_codePage.Chr[c]);
+        }
 
         var v = inputValue.ToString().Trim();
        
@@ -612,7 +641,7 @@ public partial class TerminalMatrixControl : UserControl
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
                 characterMap[x, y - 1] = characterMap[x, y];
 
-        const int last = CharacterMatrixDefinition.Height - 1;
+        int last = CharacterMatrixDefinition.Height - 1;
 
         for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             characterMap[x, last] = blank;

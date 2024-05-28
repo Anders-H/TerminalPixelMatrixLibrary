@@ -1,4 +1,3 @@
-using PixelmapLibrary;
 using TerminalMatrix;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.TerminalColor;
@@ -103,6 +102,11 @@ public partial class Form1 : Form
             terminalMatrixControl1.SetResolution(Resolution.Pixels640x200Characters80x25);
             terminalMatrixControl1.UpdateBitmap();
         }
+        else if (e.InputValue == "RESLOG")
+        {
+            terminalMatrixControl1.SetResolution(Resolution.LogPixels640x80Characters80x10);
+            terminalMatrixControl1.UpdateBitmap();
+        }
     }
 
     private void terminalMatrixControl1_InputCompleted(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
@@ -112,6 +116,7 @@ public partial class Form1 : Form
 
     private void Form1_Load(object sender, EventArgs e)
     {
+        terminalMatrixControl1.RenderingMode = RenderingMode.HighQuality;
         terminalMatrixControl1.BorderWidth = 10;
         terminalMatrixControl1.BorderHeight = 10;
         terminalMatrixControl1.UpdateBitmap();

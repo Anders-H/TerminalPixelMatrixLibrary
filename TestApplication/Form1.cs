@@ -31,6 +31,12 @@ public partial class Form1 : Form
             terminalMatrixControl1.SetStartPosition(20, 10);
             terminalMatrixControl1.UpdateBitmap();
         }
+        else if (e.InputValue == "BOX")
+        {
+            terminalMatrixControl1.Box(ColorName.White, 0, 0, 319, 199);
+            terminalMatrixControl1.Box(ColorName.White, 1, 1, 318, 198);
+            terminalMatrixControl1.UpdateBitmap();
+        }
         else if (e.InputValue == "INPUT")
         {
             System.Diagnostics.Debug.WriteLine("Starting input.");

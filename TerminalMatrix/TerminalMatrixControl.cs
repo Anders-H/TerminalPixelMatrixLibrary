@@ -34,6 +34,7 @@ public partial class TerminalMatrixControl : UserControl
     private int _borderWidth;
     private int _borderHeight;
     private bool _resolutionIncorrect;
+    private bool _use32BitForeground;
 
     public RenderingMode RenderingMode { get; set; }
     public Resolution Resolution { get; private set; }
@@ -43,6 +44,7 @@ public partial class TerminalMatrixControl : UserControl
     public ProgramLineDictionary ProgramLines { get; } = new();
     public int[,] Background24Bit { get; private set; }
     public bool UseBackground24Bit { get; set; }
+    public Action<Graphics>? ControlOverlayPainter { get; set; }
 
 #pragma warning disable CS8618
     public TerminalMatrixControl()
@@ -89,6 +91,18 @@ public partial class TerminalMatrixControl : UserControl
                 _resolutionIncorrect = true;
 
             _borderHeight = value;
+        }
+    }
+
+    public bool Use32BitForeground
+    {
+        get => _use32BitForeground;
+        set
+        {
+            if (_use32BitForeground != value)
+                _resolutionIncorrect = true;
+
+            _use32BitForeground = value;
         }
     }
 
@@ -382,6 +396,8 @@ public partial class TerminalMatrixControl : UserControl
 
         if (_fastBitmap != null)
             e.Graphics.DrawImage(_fastBitmap, 0, 0, Width, Height);
+
+        ControlOverlayPainter?.Invoke(e.Graphics);
 
         base.OnPaint(e);
     }

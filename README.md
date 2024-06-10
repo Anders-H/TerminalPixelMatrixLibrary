@@ -43,6 +43,8 @@ The image is a screenshot of the AdventureGameExample projet, a text adventure g
 
 ## Limitations
 
+### Clean exit
+
 For a clean exit, you must call the `Quit` method in the `FormClosed` event handler.
 
 ```
@@ -51,3 +53,15 @@ private void Form1_FormClosed(object sender, FormClosedEventArgs e)
     terminalMatrixControl1.Quit();
 }
 ```
+
+### Layer limitations
+
+Background layer can be activated using the `UseBackground24Bit` property.
+This will add a background to the console. It will always be on (in 24 bit) or off.
+The background pixels are stored in the `Background24Bit` array. `Background24Bit` is a two dimensional `int` array, but only three bits are used (R, G and B).
+
+The foreground (accessed using `GetPixel` and `SetPixel`) is always treated as 24 bit.
+However, the `ControlOverlayPainter` delegate will support transparency if the `Use32BitForeground` property is set.
+Default is false, meaning that opacity is ignored.
+
+In short, the control can have one or two bitmap layers, the top layer can be exposed as 32 bit for better overlaying.

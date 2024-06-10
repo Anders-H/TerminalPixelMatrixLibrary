@@ -137,16 +137,16 @@ public partial class Form1 : Form
 
     private void terminalMatrixControl1_UserBreak(object sender, EventArgs e)
     {
-        Text = "BREAK!!!";
+        Text = @"BREAK!!!";
     }
 
     private void terminalMatrixControl1_RequestToggleFullscreen(object sender, EventArgs e)
     {
-        Text = "Toggle fullscreen!!!";
+        Text = @"Toggle fullscreen!!!";
     }
 
     private void terminalMatrixControl1_FunctionKeyPressed(object sender, TerminalMatrix.Events.FunctionKeyEventArgs e)
     {
-        Text = "Function key: " + e.Key;
+        Text = @"Function key: " + e.Key;
     }
 }

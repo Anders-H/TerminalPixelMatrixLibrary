@@ -33,12 +33,16 @@
             // 
             // terminalMatrixControl1
             // 
+            terminalMatrixControl1.BorderHeight = 10;
+            terminalMatrixControl1.BorderWidth = 18;
             terminalMatrixControl1.CurrentCursorColor = 1;
             terminalMatrixControl1.Dock = DockStyle.Fill;
             terminalMatrixControl1.Location = new Point(0, 0);
             terminalMatrixControl1.Name = "terminalMatrixControl1";
+            terminalMatrixControl1.RenderingMode = TerminalMatrix.RenderingMode.HighQuality;
             terminalMatrixControl1.Size = new Size(757, 426);
             terminalMatrixControl1.TabIndex = 0;
+            terminalMatrixControl1.UseBackground24Bit = false;
             // 
             // MainWindow
             // 

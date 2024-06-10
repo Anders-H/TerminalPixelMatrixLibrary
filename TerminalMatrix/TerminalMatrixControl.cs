@@ -41,6 +41,8 @@ public partial class TerminalMatrixControl : UserControl
     public Coordinate CursorPosition { get; private set; }
     public byte CurrentCursorColor { get; set; }
     public ProgramLineDictionary ProgramLines { get; } = new();
+    public int[,] Background24Bit { get; private set; }
+    public bool UseBackground24Bit { get; set; }
 
 #pragma warning disable CS8618
     public TerminalMatrixControl()
@@ -90,6 +92,26 @@ public partial class TerminalMatrixControl : UserControl
         }
     }
 
+    public void SetPixelsToBackground(StillImageSprite image, int x, int y)
+    {
+        var startX = x + BorderWidth;
+        var startY = y + BorderHeight;
+        var maxWidth = Background24Bit.GetLength(0) - BorderWidth;
+        var maxHeight = Background24Bit.GetLength(1) - BorderHeight;
+
+        for (var sourceY = 0; sourceY < image.Height; sourceY++)
+        {
+            for (var sourceX = 0; sourceX < image.Width; sourceX++)
+            {
+                var targetX = startX + sourceX;
+                var targetY = startY + sourceY;
+                
+                if (targetX >= BorderWidth && targetX < maxWidth && targetY >= BorderHeight && targetY < maxHeight)
+                    Background24Bit[targetX, targetY] = image.Get(sourceX, sourceY);
+            }
+        }
+    }
+
     private void UserControl1_Load(object sender, EventArgs e)
     {
         DoubleBuffered = true;
@@ -104,7 +126,7 @@ public partial class TerminalMatrixControl : UserControl
     /// <param name="limit">0 (default, all lines are visible) to 23 (only the bottom two lines are visible)</param>
     public void SetTextRenderLimit(int limit)
     {
-        if (limit < 0 || limit > 23) // TODO: What is the correct number here?
+        if (limit < 0 || limit > 23)
             throw new ArgumentOutOfRangeException(nameof(limit));
 
         if (CursorPosition.Y < limit)
@@ -140,6 +162,12 @@ public partial class TerminalMatrixControl : UserControl
         _fastBitmap = Pixelmap.CreateCompatibleBitmap(size.Width, size.Height);
         _pixelMap = new Pixelmap(_fastBitmap);
         _resolutionIncorrect = false;
+        Background24Bit = new int[size.Width, size.Height];
+
+        for (var y = 0; y < size.Height; y++)
+            for (var x = 0; x < size.Width; x++)
+                Background24Bit[x, y] = 0;
+
         _pixelMap.LockBits();
         Clear();
         _pixelMap.UnlockBits();
@@ -275,7 +303,7 @@ public partial class TerminalMatrixControl : UserControl
         }
     }
 
-    public void UpdateBitmap()
+    public void UpdateBitmap(Action<Pixelmap>? underText = null, Action<Pixelmap>? overText = null)
     {
         if (QuitFlag)
             return;
@@ -287,6 +315,14 @@ public partial class TerminalMatrixControl : UserControl
         }
 
         _pixelMap.LockBits();
+        underText?.Invoke(_pixelMap);
+
+        if (UseBackground24Bit)
+        {
+            for (var y = 0; y < _pixelMap.Height; y++)
+                for (var x = 0; x < _pixelMap.Width; x++)
+                    _pixelMap.SetPixel(x, y, Color.FromArgb(Background24Bit[x, y]));
+        }
 
         for (var y = CharacterMatrixDefinition.TextRenderLimit; y < CharacterMatrixDefinition.Height; y++)
         {
@@ -297,7 +333,7 @@ public partial class TerminalMatrixControl : UserControl
                 if (CursorPosition.IsSame(x, y))
                 {
                     if (_cursorVisibleBlink)
-                        _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(CurrentCursorColor), Color.Black);
+                        _fontMonochromeSprite.Draw(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(CurrentCursorColor));
                     else
                         _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, Color.Black, _palette.GetColor(CurrentCursorColor));
                 }
@@ -308,6 +344,7 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
+        overText?.Invoke(_pixelMap);
         _pixelMap.UnlockBits();
         Invalidate();
     }

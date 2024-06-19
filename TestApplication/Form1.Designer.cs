@@ -35,6 +35,7 @@
             // 
             terminalMatrixControl1.BorderHeight = 20;
             terminalMatrixControl1.BorderWidth = 20;
+            terminalMatrixControl1.ControlOverlayPainter = null;
             terminalMatrixControl1.CurrentCursorColor = 5;
             terminalMatrixControl1.Dock = DockStyle.Fill;
             terminalMatrixControl1.Location = new Point(0, 0);
@@ -42,11 +43,14 @@
             terminalMatrixControl1.RenderingMode = TerminalMatrix.RenderingMode.HighSpeed;
             terminalMatrixControl1.Size = new Size(1054, 691);
             terminalMatrixControl1.TabIndex = 0;
+            terminalMatrixControl1.Use32BitForeground = false;
+            terminalMatrixControl1.UseBackground24Bit = false;
             terminalMatrixControl1.TypedLine += terminalMatrixControl1_TypedLine;
             terminalMatrixControl1.InputCompleted += terminalMatrixControl1_InputCompleted;
             terminalMatrixControl1.UserBreak += terminalMatrixControl1_UserBreak;
             terminalMatrixControl1.RequestToggleFullscreen += terminalMatrixControl1_RequestToggleFullscreen;
             terminalMatrixControl1.FunctionKeyPressed += terminalMatrixControl1_FunctionKeyPressed;
+            terminalMatrixControl1.Tick += terminalMatrixControl1_Tick;
             // 
             // Form1
             // 

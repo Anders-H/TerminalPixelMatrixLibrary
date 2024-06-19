@@ -24,6 +24,17 @@ public static class ResolutionHelper
             _ => throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null)
         };
 
+    public static string ResolutionToString(Resolution resolution) =>
+        resolution switch
+        {
+            Resolution.Pixels640x200Characters80x25 => "640*200 pixels, 80*25 characters",
+            Resolution.Pixels480x200Characters60x25 => "480*200 pixels, 60*25 characters",
+            Resolution.Pixels320x200Characters40x25 => "320*200 pixels, 40*25 characters",
+            Resolution.Pixels160x200Characters20x25 => "160*200 pixels, 20*25 characters",
+            Resolution.LogPixels640x80Characters80x10 => "640*200 pixels, 80*20 characters",
+            _ => throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null)
+        };
+
     public static Bitmap GetBitmap(Resolution resolution, int borderWidth, int borderHeight)
     {
         var size = GetPixelSize(resolution, borderWidth, borderHeight);

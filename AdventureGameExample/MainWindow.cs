@@ -19,11 +19,6 @@ public partial class MainWindow : Form
         terminalMatrixControl1.SetResolution(Resolution.Pixels640x200Characters80x25);
         terminalMatrixControl1.SetPixelsToBackground(_image, 0, 0);
         terminalMatrixControl1.UseBackground24Bit = true;
-        terminalMatrixControl1.ControlOverlayPainter = (g =>
-        {
-            using var tintRedBrush = new SolidBrush(Color.FromArgb(20, 255, 0, 0));
-            g.FillRectangle(tintRedBrush, 100, 100, 100, 100);
-        });
     }
 
     private void MainWindow_Shown(object sender, EventArgs e)
@@ -43,6 +38,8 @@ public partial class MainWindow : Form
                 quitFlag = true;
 
         } while (!quitFlag);
+
+        Close();
     }
 
     private void MainWindow_FormClosed(object sender, FormClosedEventArgs e)

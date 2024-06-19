@@ -30,11 +30,11 @@
         {
             SuspendLayout();
             // 
-            // UserControl1
+            // TerminalMatrixControl
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            Name = "UserControl1";
+            Name = "TerminalMatrixControl";
             Size = new Size(800, 450);
             Load += UserControl1_Load;
             ResumeLayout(false);

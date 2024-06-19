@@ -18,7 +18,9 @@ public partial class TerminalMatrixControl : UserControl
     public event UserBreakDelegate? UserBreak;
     public event RequestToggleFullscreenDelegate? RequestToggleFullscreen;
     public event FunctionKeyPressedDelegate? FunctionKeyPressed;
+    public event TickDelegate? Tick;
 
+    private DateTime _tickTime;
     private byte[,] _characterColorMap;
     private byte[,] _characterMap;
     private Pixelmap _pixelMap;
@@ -119,7 +121,7 @@ public partial class TerminalMatrixControl : UserControl
             {
                 var targetX = startX + sourceX;
                 var targetY = startY + sourceY;
-                
+
                 if (targetX >= BorderWidth && targetX < maxWidth && targetY >= BorderHeight && targetY < maxHeight)
                     Background24Bit[targetX, targetY] = image.Get(sourceX, sourceY);
             }
@@ -132,6 +134,7 @@ public partial class TerminalMatrixControl : UserControl
         SetResolution(Resolution.Pixels320x200Characters40x25);
         _timer.Tick += Blink;
         _timer.Enabled = true;
+        _tickTime = DateTime.Now;
     }
 
     /// <summary>
@@ -192,6 +195,12 @@ public partial class TerminalMatrixControl : UserControl
         _cursorVisibleBlink = !_cursorVisibleBlink;
         UpdateBitmap();
         Invalidate();
+
+        if (DateTime.Now.Subtract(_tickTime).TotalSeconds >= 0.9)
+        {
+            _tickTime = DateTime.Now;
+            Tick?.Invoke(this, new TickEventArgs(CursorPosition.X, CursorPosition.Y));
+        }
     }
 
     public void ClearColorMap()
@@ -347,7 +356,7 @@ public partial class TerminalMatrixControl : UserControl
                 if (CursorPosition.IsSame(x, y))
                 {
                     if (_cursorVisibleBlink)
-                        _fontMonochromeSprite.Draw(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(CurrentCursorColor));
+                        _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(CurrentCursorColor), Color.Black);
                     else
                         _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, Color.Black, _palette.GetColor(CurrentCursorColor));
                 }
@@ -579,7 +588,7 @@ public partial class TerminalMatrixControl : UserControl
         }
 
         var v = inputValue.ToString().Trim();
-       
+
         if (AddProgramLine(v, shift))
         {
             NextLine();
@@ -699,7 +708,7 @@ public partial class TerminalMatrixControl : UserControl
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
                 characterMap[x, y - 1] = characterMap[x, y];
 
-        int last = CharacterMatrixDefinition.Height - 1;
+        var last = CharacterMatrixDefinition.Height - 1;
 
         for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
             characterMap[x, last] = blank;

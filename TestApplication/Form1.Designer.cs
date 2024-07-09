@@ -33,6 +33,7 @@
             // 
             // terminalMatrixControl1
             // 
+            terminalMatrixControl1.AutoProgramManagement = false;
             terminalMatrixControl1.BorderHeight = 20;
             terminalMatrixControl1.BorderWidth = 20;
             terminalMatrixControl1.ControlOverlayPainter = null;
@@ -43,6 +44,7 @@
             terminalMatrixControl1.RenderingMode = TerminalMatrix.RenderingMode.HighSpeed;
             terminalMatrixControl1.Size = new Size(1054, 691);
             terminalMatrixControl1.TabIndex = 0;
+            terminalMatrixControl1.UnlimitedInput = true;
             terminalMatrixControl1.Use32BitForeground = false;
             terminalMatrixControl1.UseBackground24Bit = false;
             terminalMatrixControl1.TypedLine += terminalMatrixControl1_TypedLine;

@@ -8,14 +8,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>2.5.0</Version>
+		<Version>2.6.0</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>2.5.0</AssemblyVersion>
-		<FileVersion>2.5.0</FileVersion>
+		<AssemblyVersion>2.6.0</AssemblyVersion>
+		<FileVersion>2.6.0</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>terminal.png</PackageIcon>
-		<PackageReleaseNotes>Bugfix: Cursor blink..</PackageReleaseNotes>
+		<PackageReleaseNotes>Program management is working, can be activated using the AutoProgramManagement property. Also, new input methods for int and float.</PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/Anders-H/TerminalPixelMatrixLibrary</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>

@@ -45,12 +45,22 @@ public partial class Form1 : Form
         }
         else if (e.InputValue == "INLINE INPUT")
         {
-            var response = terminalMatrixControl1.Input("What now? ", (int)ColorName.Red, (int)ColorName.LightBlue);
+            var response = terminalMatrixControl1.InputString("What now? ", (int)ColorName.Red, (int)ColorName.LightBlue);
+            terminalMatrixControl1.WriteLine($"You say: {response}");
+        }
+        else if (e.InputValue == "FLOAT INPUT")
+        {
+            var response = terminalMatrixControl1.InputDouble("What now? ", (int)ColorName.Red, (int)ColorName.LightBlue);
+            terminalMatrixControl1.WriteLine($"You say: {response:n2}");
+        }
+        else if (e.InputValue == "INT INPUT")
+        {
+            var response = terminalMatrixControl1.InputInteger("What now? ", (int)ColorName.Red, (int)ColorName.LightBlue);
             terminalMatrixControl1.WriteLine($"You say: {response}");
         }
         else if (e.InputValue == "INLINE INPUT WITH DEFAULT")
         {
-            var response = terminalMatrixControl1.Input("What now? ", "I am a default value", (int)ColorName.Blue, (int)ColorName.Violet);
+            var response = terminalMatrixControl1.InputString("What now? ", "I am a default value", (int)ColorName.Blue, (int)ColorName.Violet);
             terminalMatrixControl1.WriteLine($"You say: {response}");
         }
         else if (e.InputValue == "LIST")

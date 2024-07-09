@@ -35,7 +35,7 @@ public partial class MainWindow : Form
                 var gif = images[i - 1];
                 terminalMatrixControl1.SetPixels(0, 0, gif);
                 terminalMatrixControl1.WriteLine($"Image {i} of {images.Count}. Press Enter or type QUIT.");
-                var response = terminalMatrixControl1.Input(">").ToUpper().Trim();
+                var response = terminalMatrixControl1.InputString(">").ToUpper().Trim();
 
                 if (response == "QUIT")
                 {

@@ -7,6 +7,7 @@ using PixelmapLibrary.FontManagement;
 using PixelmapLibrary.SpriteManagement;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.Events;
+using TerminalMatrix.StatementManagement;
 using TerminalMatrix.TerminalColor;
 
 namespace TerminalMatrix;
@@ -20,6 +21,8 @@ public partial class TerminalMatrixControl : UserControl
     public event FunctionKeyPressedDelegate? FunctionKeyPressed;
     public event TickDelegate? Tick;
 
+    private StatementLocationList StatementLocations { get; }
+    private StatementLocation CurrentStatementLocation { get; set; }
     private DateTime _tickTime;
     private byte[,] _characterColorMap;
     private byte[,] _characterMap;
@@ -33,8 +36,7 @@ public partial class TerminalMatrixControl : UserControl
     private TerminalState TerminalState { get; }
     private readonly TerminalMatrixKeypressHandler _keypressHandler;
     private readonly FontMonochromeSprite _fontMonochromeSprite;
-    private int _borderWidth;
-    private int _borderHeight;
+    private Size _border;
     private bool _resolutionIncorrect;
     private bool _use32BitForeground;
 
@@ -47,11 +49,16 @@ public partial class TerminalMatrixControl : UserControl
     public int[,] Background24Bit { get; private set; }
     public bool UseBackground24Bit { get; set; }
     public Action<Graphics>? ControlOverlayPainter { get; set; }
+    public bool AutoProgramManagement { get; set; }
+    public bool UnlimitedInput { get; set; }
 
 #pragma warning disable CS8618
     public TerminalMatrixControl()
 #pragma warning restore CS8618
     {
+        StatementLocations = new StatementLocationList();
+        CurrentStatementLocation = new StatementLocation(0, 0, 0, 0);
+        StatementLocations.Add(CurrentStatementLocation);
         _resolutionIncorrect = true;
         _fontMonochromeSprite = FontMonochromeSprite.Create();
         _cursorVisibleBlink = false;
@@ -71,13 +78,13 @@ public partial class TerminalMatrixControl : UserControl
     /// </summary>
     public int BorderWidth
     {
-        get => _borderWidth;
+        get => _border.Width;
         set
         {
-            if (_borderWidth != value)
+            if (_border.Width != value)
                 _resolutionIncorrect = true;
 
-            _borderWidth = value;
+            _border.Width = value;
         }
     }
 
@@ -86,13 +93,13 @@ public partial class TerminalMatrixControl : UserControl
     /// </summary>
     public int BorderHeight
     {
-        get => _borderHeight;
+        get => _border.Height;
         set
         {
-            if (_borderHeight != value)
+            if (_border.Height != value)
                 _resolutionIncorrect = true;
 
-            _borderHeight = value;
+            _border.Height = value;
         }
     }
 
@@ -367,6 +374,7 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
+        StatementLocations.Draw(_pixelMap, _border.Width, _border.Height);
         overText?.Invoke(_pixelMap);
         _pixelMap.UnlockBits();
         Invalidate();
@@ -447,11 +455,24 @@ public partial class TerminalMatrixControl : UserControl
         switch (e.KeyCode)
         {
             case Keys.Tab:
+                e.IsInputKey = true;
+                StatementLocations.LastInputWasBack = false;
+                break;
             case Keys.Up:
+                e.IsInputKey = true;
+                StatementLocations.LastInputWasBack = false;
+                break;
             case Keys.Right:
+                e.IsInputKey = true;
+                StatementLocations.LastInputWasBack = false;
+                break;
             case Keys.Down:
+                e.IsInputKey = true;
+                StatementLocations.LastInputWasBack = false;
+                break;
             case Keys.Left:
                 e.IsInputKey = true;
+                StatementLocations.LastInputWasBack = true;
                 break;
         }
 
@@ -466,8 +487,11 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnKeyDown(KeyEventArgs e)
     {
+        StatementLocations.LastInputWasBack = false;
+
         if (e.KeyCode == Keys.Back)
         {
+            StatementLocations.LastInputWasBack = true;
             var limit = TerminalState.InputMode ? TerminalState.InputStartX : 0;
 
             if (CursorPosition.X > limit)
@@ -557,7 +581,9 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             default:
+                CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(CursorPosition.X, CursorPosition.Y);
                 _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
+                //TODO: Rules for input locations.
                 break;
         }
 
@@ -583,6 +609,7 @@ public partial class TerminalMatrixControl : UserControl
         for (var x = start; x < CharacterMatrixDefinition.Width; x++)
         {
             var c = _characterMap[x, CursorPosition.Y];
+
             if (c != 0)
                 inputValue.Append(_codePage.Chr[c]);
         }
@@ -659,41 +686,67 @@ public partial class TerminalMatrixControl : UserControl
         map[CharacterMatrixDefinition.Width - 1, CursorPosition.Y] = empty;
     }
 
-    public void SetProgramLines(string code)
+    public SetProgramLinesResult SetProgramLines(string? code)
     {
-        // TODO
-    }
+        var s = (code ?? "").Trim();
 
-    private bool AddProgramLine(string value, bool shift)
-    {
-        if (shift || TerminalState.InputMode)
-            return false;
+        if (string.IsNullOrWhiteSpace(s))
+            return SetProgramLinesResult.CreateFail(0, 0, "No data provided.");
 
-        var match = Regex.Match(value, @"^([0-9]+)\s(.*)$");
+        var rows = s.Split("\r\n".ToCharArray());
+        var trimmedRows = new List<string>();
 
-        if (match.Success)
+        foreach (var row in rows)
         {
-
-            if (!int.TryParse(match.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var lineNumber))
-                return false;
-
-            var line = new ProgramLine(value, lineNumber, match.Groups[2].Value.Trim());
-            ProgramLines.InsertProgramLine(line);
-            return true;
+            var r = row.Replace("\r", "").Replace("\n", "").Trim();
+            
+            if (!string.IsNullOrWhiteSpace(r))
+                trimmedRows.Add(r);
         }
 
-        match = Regex.Match(value, @"^([0-9]+)$");
+        if (trimmedRows.Count <= 0)
+            return SetProgramLinesResult.CreateFail(0, 0, "No data provided.");
+
+        ProgramLines.Clear();
+
+        for (var i = 0; i < trimmedRows.Count; i++)
+        {
+            if (!SetProgramLine(trimmedRows[i]))
+                return SetProgramLinesResult.CreateFail(i, trimmedRows.Count, $@"Failed to add: {trimmedRows[i]}");
+        }
+
+        return SetProgramLinesResult.CreateSuccess(trimmedRows.Count, trimmedRows.Count);
+    }
+
+    public bool SetProgramLine(string row)
+    {
+        var match = Regex.Match(row, @"^([0-9]+)\s*(.*)$");
 
         if (match.Success)
         {
+
             if (!int.TryParse(match.Groups[1].Value, NumberStyles.Any, CultureInfo.InvariantCulture, out var lineNumber))
                 return false;
 
-            ProgramLines.RemoveProgramLine(lineNumber);
+            var line = new ProgramLine(row, lineNumber, match.Groups[2].Value.Trim());
+
+            if (string.IsNullOrWhiteSpace(line.Code))
+                ProgramLines.RemoveProgramLine(lineNumber);
+            else
+                ProgramLines.InsertProgramLine(line);
+
             return true;
         }
 
         return false;
+    }
+
+    private bool AddProgramLine(string value, bool shift)
+    {
+        if (shift || TerminalState.InputMode || !AutoProgramManagement)
+            return false;
+
+        return SetProgramLine(value);
     }
 
     private new void Scroll()
@@ -721,7 +774,7 @@ public partial class TerminalMatrixControl : UserControl
         BeginInput(prompt, defaultValue, CurrentCursorColor, CurrentCursorColor);
 
     public void BeginInput(string prompt, byte promptColor, byte valueColor) =>
-        BeginInput(prompt, "", CurrentCursorColor, CurrentCursorColor);
+        BeginInput(prompt, "", promptColor, valueColor);
 
     public void BeginInput(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
@@ -808,16 +861,16 @@ public partial class TerminalMatrixControl : UserControl
         Invalidate();
     }
 
-    public string Input(string prompt) =>
-        Input(prompt, "", CurrentCursorColor, CurrentCursorColor);
+    public string InputString(string prompt) =>
+        InputString(prompt, "", CurrentCursorColor, CurrentCursorColor);
 
-    public string Input(string prompt, string defaultValue) =>
-        Input(prompt, defaultValue, CurrentCursorColor, CurrentCursorColor);
+    public string InputString(string prompt, string defaultValue) =>
+        InputString(prompt, defaultValue, CurrentCursorColor, CurrentCursorColor);
 
-    public string Input(string prompt, byte promptColor, byte valueColor) =>
-        Input(prompt, "", CurrentCursorColor, CurrentCursorColor);
+    public string InputString(string prompt, byte promptColor, byte valueColor) =>
+        InputString(prompt, "", promptColor, valueColor);
 
-    public string Input(string prompt, string defaultValue, byte promptColor, byte valueColor)
+    public string InputString(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
         BeginInput(prompt, defaultValue, promptColor, valueColor);
 
@@ -834,13 +887,53 @@ public partial class TerminalMatrixControl : UserControl
         return _lastInput;
     }
 
-    public void New()
+    public double InputDouble(string prompt) =>
+        InputDouble(prompt, "", CurrentCursorColor, CurrentCursorColor);
+
+    public double InputDouble(string prompt, string defaultValue) =>
+        InputDouble(prompt, defaultValue, CurrentCursorColor, CurrentCursorColor);
+
+    public double InputDouble(string prompt, byte promptColor, byte valueColor) =>
+        InputDouble(prompt, "", promptColor, valueColor);
+
+    public double InputDouble(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
-        ProgramLines.Clear();
+        do
+        {
+            var inputResult = InputString(prompt, defaultValue, promptColor, valueColor);
+
+            if (double.TryParse(inputResult, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+                return result;
+
+            WriteLine("?Expected float, redo from start");
+        } while (true);
     }
 
-    public void Quit()
+    public int InputInteger(string prompt) =>
+        InputInteger(prompt, "", CurrentCursorColor, CurrentCursorColor);
+
+    public int InputInteger(string prompt, string defaultValue) =>
+        InputInteger(prompt, defaultValue, CurrentCursorColor, CurrentCursorColor);
+
+    public int InputInteger(string prompt, byte promptColor, byte valueColor) =>
+        InputInteger(prompt, "", promptColor, valueColor);
+
+    public int InputInteger(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
-        QuitFlag = true;
+        do
+        {
+            var inputResult = InputString(prompt, defaultValue, promptColor, valueColor);
+
+            if (int.TryParse(inputResult, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+                return result;
+
+            WriteLine("?Expected integer, redo from start");
+        } while (true);
     }
+
+    public void New() =>
+        ProgramLines.Clear();
+
+    public void Quit() =>
+        QuitFlag = true;
 }

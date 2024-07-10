@@ -452,23 +452,26 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
     {
+        StatementLocations.LastInputWasBack = false;
+        StatementLocations.LastInputWasDelete = false;
+        StatementLocations.LastInputWasTab = false;
+        StatementLocations.LastInputWasEnter = false;
+        StatementLocations.LastInputWasRegularCharacter = false;
+
         switch (e.KeyCode)
         {
             case Keys.Tab:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasBack = false;
+                StatementLocations.LastInputWasTab = true;
                 break;
             case Keys.Up:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasBack = false;
                 break;
             case Keys.Right:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasBack = false;
                 break;
             case Keys.Down:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasBack = false;
                 break;
             case Keys.Left:
                 e.IsInputKey = true;
@@ -479,16 +482,8 @@ public partial class TerminalMatrixControl : UserControl
         base.OnPreviewKeyDown(e);
     }
 
-    protected override void OnKeyPress(KeyPressEventArgs e)
-    {
-        _keypressHandler.HandleKeyPress(e, TerminalState.InputMode, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
-        base.OnKeyPress(e);
-    }
-
     protected override void OnKeyDown(KeyEventArgs e)
     {
-        StatementLocations.LastInputWasBack = false;
-
         if (e.KeyCode == Keys.Back)
         {
             StatementLocations.LastInputWasBack = true;
@@ -582,8 +577,7 @@ public partial class TerminalMatrixControl : UserControl
                 break;
             default:
                 CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(CursorPosition.X, CursorPosition.Y);
-                _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, TypeCharacter, CursorPosition, ShowKeyboardActivity, Show);
-                //TODO: Rules for input locations.
+                _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, CursorPosition, ShowKeyboardActivity, Show);
                 break;
         }
 
@@ -596,6 +590,19 @@ public partial class TerminalMatrixControl : UserControl
             ShowKeyboardActivity();
             _timer.Enabled = true;
         }
+    }
+
+    protected override void OnKeyPress(KeyPressEventArgs e)
+    {
+        _keypressHandler.HandleKeyPress(e,TypeCharacter, out var lastInputWasRegularCharacter);
+        StatementLocations.LastInputWasRegularCharacter = lastInputWasRegularCharacter;
+        HandleStatementLocation();
+        base.OnKeyPress(e);
+    }
+
+    private void HandleStatementLocation()
+    {
+        
     }
 
     internal void HandleEnter(bool shift)

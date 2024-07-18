@@ -52,7 +52,6 @@
             terminalMatrixControl1.UserBreak += terminalMatrixControl1_UserBreak;
             terminalMatrixControl1.RequestToggleFullscreen += terminalMatrixControl1_RequestToggleFullscreen;
             terminalMatrixControl1.FunctionKeyPressed += terminalMatrixControl1_FunctionKeyPressed;
-            terminalMatrixControl1.Tick += terminalMatrixControl1_Tick;
             // 
             // Form1
             // 

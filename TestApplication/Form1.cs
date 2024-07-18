@@ -6,7 +6,6 @@ namespace TestApplication;
 
 public partial class Form1 : Form
 {
-    private int _tickCount = 0;
     private readonly Random _rnd = new();
 
     public Form1()
@@ -159,11 +158,5 @@ public partial class Form1 : Form
     private void terminalMatrixControl1_FunctionKeyPressed(object sender, TerminalMatrix.Events.FunctionKeyEventArgs e)
     {
         Text = @"Function key: " + e.Key;
-    }
-
-    private void terminalMatrixControl1_Tick(object sender, TerminalMatrix.Events.TickEventArgs e)
-    {
-        _tickCount++;
-        System.Diagnostics.Debug.WriteLine($"Tick: {_tickCount}");
     }
 }

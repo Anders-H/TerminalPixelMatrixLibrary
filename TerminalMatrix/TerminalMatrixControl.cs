@@ -22,7 +22,7 @@ public partial class TerminalMatrixControl : UserControl
     public event TickDelegate? Tick;
 
     private StatementLocationList StatementLocations { get; }
-    private StatementLocation CurrentStatementLocation { get; set; }
+    private StatementLocation? CurrentStatementLocation { get; set; }
     private DateTime _tickTime;
     private byte[,] _characterColorMap;
     private byte[,] _characterMap;
@@ -57,8 +57,7 @@ public partial class TerminalMatrixControl : UserControl
 #pragma warning restore CS8618
     {
         StatementLocations = new StatementLocationList();
-        CurrentStatementLocation = new StatementLocation(0, 0, 0, 0);
-        StatementLocations.Add(CurrentStatementLocation);
+        CurrentStatementLocation = null;
         _resolutionIncorrect = true;
         _fontMonochromeSprite = FontMonochromeSprite.Create();
         _cursorVisibleBlink = false;
@@ -374,7 +373,7 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
-        StatementLocations.Draw(_pixelMap, _border.Width, _border.Height);
+        StatementLocations.Draw(_pixelMap, _border.Width, _border.Height, CurrentStatementLocation);
         overText?.Invoke(_pixelMap);
         _pixelMap.UnlockBits();
         Invalidate();
@@ -436,7 +435,17 @@ public partial class TerminalMatrixControl : UserControl
         if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
         {
             CursorPosition.X++;
-            ShowKeyboardActivity();
+        }
+        else if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+        {
+            CursorPosition.X = 0;
+            CursorPosition.Y++;
+        }
+        else
+        {
+            Scroll();
+            CursorPosition.X = 0;
+            CursorPosition.Y = CharacterMatrixDefinition.Height - 1;
         }
 
         ShowKeyboardActivity();
@@ -452,6 +461,17 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
     {
+        if (StatementLocations.LastInputWasBack)
+            StatementLocations.Previous = PreviousInputCategory.Back;
+        else if (StatementLocations.LastInputWasDelete)
+            StatementLocations.Previous = PreviousInputCategory.Delete;
+        else if (StatementLocations.LastInputWasTab)
+            StatementLocations.Previous = PreviousInputCategory.Tab;
+        else if (StatementLocations.LastInputWasEnter)
+            StatementLocations.Previous = PreviousInputCategory.Enter;
+        else if (StatementLocations.LastInputWasRegularCharacter)
+            StatementLocations.Previous = PreviousInputCategory.RegularCharacter;
+
         StatementLocations.LastInputWasBack = false;
         StatementLocations.LastInputWasDelete = false;
         StatementLocations.LastInputWasTab = false;
@@ -594,7 +614,7 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnKeyPress(KeyPressEventArgs e)
     {
-        _keypressHandler.HandleKeyPress(e,TypeCharacter, out var lastInputWasRegularCharacter);
+        _keypressHandler.HandleKeyPress(e, TypeCharacter, out var lastInputWasRegularCharacter);
         StatementLocations.LastInputWasRegularCharacter = lastInputWasRegularCharacter;
         HandleStatementLocation();
         base.OnKeyPress(e);
@@ -602,8 +622,142 @@ public partial class TerminalMatrixControl : UserControl
 
     private void HandleStatementLocation()
     {
-        
+        var x = CursorPosition.X;
+        var y = CursorPosition.Y;
+
+        if (StatementLocations.LastInputWasBack)
+        {
+            switch (StatementLocations.Previous)
+            {
+                case PreviousInputCategory.Back:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Delete:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Tab:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.RegularCharacter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        if (StatementLocations.LastInputWasDelete)
+        {
+            switch (StatementLocations.Previous)
+            {
+                case PreviousInputCategory.Back:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Delete:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Tab:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.RegularCharacter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        if (StatementLocations.LastInputWasTab)
+        {
+            switch (StatementLocations.Previous)
+            {
+                case PreviousInputCategory.Back:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Delete:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Tab:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.RegularCharacter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        if (StatementLocations.LastInputWasEnter)
+        {
+            switch (StatementLocations.Previous)
+            {
+                case PreviousInputCategory.Back:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Delete:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Tab:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.RegularCharacter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        if (StatementLocations.LastInputWasRegularCharacter)
+        {
+            switch (StatementLocations.Previous)
+            {
+                case PreviousInputCategory.Back:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Delete:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Tab:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.RegularCharacter:
+                    if (x > 1)
+                    {
+                        CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(x - 2, y);
+                        
+                        if (CurrentStatementLocation != null && CurrentStatementLocation.InputEndX < x - 1)
+                            CurrentStatementLocation.Grow(CharactersWidth, CharactersHeight);
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
     }
+
+    public int CharactersWidth =>
+        _characterMap.GetLength(0);
+
+    public int CharactersHeight =>
+        _characterMap.GetLength(1);
 
     internal void HandleEnter(bool shift)
     {
@@ -760,6 +914,7 @@ public partial class TerminalMatrixControl : UserControl
     {
         ScrollCharacterMap(_characterColorMap, CurrentCursorColor);
         ScrollCharacterMap(_characterMap, (byte)' ');
+        StatementLocations.Scroll();
     }
 
     private void ScrollCharacterMap(byte[,] characterMap, byte blank)

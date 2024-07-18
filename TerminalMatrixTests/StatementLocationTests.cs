@@ -41,4 +41,12 @@ public class StatementLocationTests
         Assert.IsTrue(x.GetStatementLocationFromPosition(10, 7).Is(0, 7, 10, 7));
         Assert.IsTrue(x.GetStatementLocationFromPosition(11, 7).Is(11, 7, 11, 7));
     }
+
+    [TestMethod]
+    public void Grow()
+    {
+        var s = new StatementLocation(5, 2, 7, 3);
+        s.Grow(40, 25);
+        Assert.IsTrue(s.Is(6, 2, 7, 3));
+    }
 }

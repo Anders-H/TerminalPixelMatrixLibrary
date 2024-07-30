@@ -469,6 +469,8 @@ public partial class TerminalMatrixControl : UserControl
             StatementLocations.Previous = PreviousInputCategory.Tab;
         else if (StatementLocations.LastInputWasEnter)
             StatementLocations.Previous = PreviousInputCategory.Enter;
+        else if (StatementLocations.LastInputWasCursorMovement)
+            StatementLocations.Previous = PreviousInputCategory.CursorMovement;
         else if (StatementLocations.LastInputWasRegularCharacter)
             StatementLocations.Previous = PreviousInputCategory.RegularCharacter;
 
@@ -476,6 +478,7 @@ public partial class TerminalMatrixControl : UserControl
         StatementLocations.LastInputWasDelete = false;
         StatementLocations.LastInputWasTab = false;
         StatementLocations.LastInputWasEnter = false;
+        StatementLocations.LastInputWasCursorMovement = false;
         StatementLocations.LastInputWasRegularCharacter = false;
 
         switch (e.KeyCode)
@@ -486,16 +489,19 @@ public partial class TerminalMatrixControl : UserControl
                 break;
             case Keys.Up:
                 e.IsInputKey = true;
+                StatementLocations.LastInputWasCursorMovement = true;
                 break;
             case Keys.Right:
                 e.IsInputKey = true;
+                StatementLocations.LastInputWasCursorMovement = true;
                 break;
             case Keys.Down:
                 e.IsInputKey = true;
+                StatementLocations.LastInputWasCursorMovement = true;
                 break;
             case Keys.Left:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasBack = true;
+                StatementLocations.LastInputWasCursorMovement = true;
                 break;
         }
 
@@ -566,6 +572,7 @@ public partial class TerminalMatrixControl : UserControl
                 if (TerminalState.InputMode)
                     return;
 
+                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.Y = CharacterMatrixDefinition.TextRenderLimit;
                 ShowEffect();
                 break;
@@ -574,14 +581,17 @@ public partial class TerminalMatrixControl : UserControl
                 if (TerminalState.InputMode)
                     return;
 
+                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.Y = CharacterMatrixDefinition.Height - 1;
                 ShowEffect();
                 break;
             case Keys.Home:
+                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.X = TerminalState.InputMode ? TerminalState.InputStartX : 0;
                 ShowEffect();
                 break;
             case Keys.End:
+                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.X = CharacterMatrixDefinition.Width - 1;
                 ShowEffect();
                 break;
@@ -596,7 +606,6 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             default:
-                CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(CursorPosition.X, CursorPosition.Y);
                 _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, CursorPosition, ShowKeyboardActivity, Show);
                 break;
         }
@@ -641,6 +650,9 @@ public partial class TerminalMatrixControl : UserControl
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
+                case PreviousInputCategory.CursorMovement:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
                 case PreviousInputCategory.RegularCharacter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
@@ -663,6 +675,9 @@ public partial class TerminalMatrixControl : UserControl
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
                 case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.CursorMovement:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
                 case PreviousInputCategory.RegularCharacter:
@@ -689,6 +704,9 @@ public partial class TerminalMatrixControl : UserControl
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
+                case PreviousInputCategory.CursorMovement:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
                 case PreviousInputCategory.RegularCharacter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
@@ -711,6 +729,36 @@ public partial class TerminalMatrixControl : UserControl
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
                 case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.CursorMovement:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.RegularCharacter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+
+        if (StatementLocations.LastInputWasCursorMovement)
+        {
+            switch (StatementLocations.Previous)
+            {
+                case PreviousInputCategory.Back:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Delete:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Tab:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.Enter:
+                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
+                    break;
+                case PreviousInputCategory.CursorMovement:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
                 case PreviousInputCategory.RegularCharacter:
@@ -737,13 +785,24 @@ public partial class TerminalMatrixControl : UserControl
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     break;
+                case PreviousInputCategory.CursorMovement:
+                    CurrentStatementLocation = StatementLocations.FindStatementLocationFromPosition(x, y);
+                    break;
                 case PreviousInputCategory.RegularCharacter:
-                    if (x > 1)
+                    if ((x == 0 || x == 1) && y == 0)
+                    {
+                        CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(0, 0);
+                    }
+                    else if (x > 1)
                     {
                         CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(x - 2, y);
                         
                         if (CurrentStatementLocation != null && CurrentStatementLocation.InputEndX < x - 1)
                             CurrentStatementLocation.Grow(CharactersWidth, CharactersHeight);
+                    }
+                    else if (x == 1)
+                    {
+                        CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(0, y);
                     }
 
                     break;

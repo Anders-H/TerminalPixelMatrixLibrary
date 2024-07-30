@@ -6,5 +6,6 @@ public enum PreviousInputCategory
     Delete,
     Tab,
     Enter,
+    CursorMovement,
     RegularCharacter
 }

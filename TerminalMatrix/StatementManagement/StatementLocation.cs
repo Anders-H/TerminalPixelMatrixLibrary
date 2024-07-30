@@ -110,6 +110,16 @@ public class StatementLocation
         return false;
     }
 
+    public void HitTest(StatementLocation s)
+    {
+
+    }
+
+    public Point[] GetPoints(int width)
+    {
+
+    }
+
     public bool Is(int inputStartX, int inputStartY, int inputEndX, int inputEndY) =>
         InputStartX == inputStartX
         && InputStartY == inputStartY
@@ -139,4 +149,7 @@ public class StatementLocation
         InputEndX = 0;
         InputEndY++;
     }
+
+    public override string ToString() =>
+        $"({InputStartX}, {InputStartY})-({InputEndX}, {InputEndY})";
 }

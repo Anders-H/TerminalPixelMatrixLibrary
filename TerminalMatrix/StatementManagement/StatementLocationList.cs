@@ -1,5 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using PixelmapLibrary;
+﻿using PixelmapLibrary;
 
 namespace TerminalMatrix.StatementManagement;
 
@@ -29,6 +28,8 @@ public class StatementLocationList : List<StatementLocation>
     {
         if (DataCorrupted())
             throw new SystemException("Override!!!!");
+
+        base.Add(s);
     }
 
     private bool DataCorrupted()

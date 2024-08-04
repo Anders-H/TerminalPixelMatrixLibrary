@@ -110,15 +110,8 @@ public class StatementLocation
         return false;
     }
 
-    public void HitTest(StatementLocation s)
-    {
-
-    }
-
-    public Point[] GetPoints(int width)
-    {
-
-    }
+    public bool HitTest(StatementLocation s) =>
+        HitTest(s.InputStartX, s.InputStartY) || HitTest(s.InputEndX, s.InputEndY);
 
     public bool Is(int inputStartX, int inputStartY, int inputEndX, int inputEndY) =>
         InputStartX == inputStartX

@@ -6,16 +6,6 @@ namespace TerminalMatrixTests;
 public class StatementLocationTests
 {
     [TestMethod]
-    public void GetPoints()
-    {
-        var s = new StatementLocation(5, 2, 7, 3);
-        var points = s.GetPoints(10);
-        Assert.IsTrue(points.Length == 13);
-        Assert.IsTrue(points.First().X == 5 && points.First().Y == 2);
-        Assert.IsTrue(points.Last().X == 7 && points.Last().Y == 3);
-    }
-
-    [TestMethod]
     public void HitTest()
     {
         var s = new StatementLocation(5, 2, 7, 3);
@@ -36,8 +26,10 @@ public class StatementLocationTests
     public void HitTest2()
     {
         var s = new StatementLocation(5, 2, 7, 3);
-        Assert.IsFalse(s.HitTest(new StatementLocation(7, 3, 8, 3)));
+        Assert.IsTrue(s.HitTest(new StatementLocation(5, 3, 5, 4)));
+        Assert.IsTrue(s.HitTest(new StatementLocation(7, 3, 8, 3)));
         Assert.IsFalse(s.HitTest(new StatementLocation(8, 3, 9, 3)));
+        Assert.IsFalse(s.HitTest(new StatementLocation(0, 0, 10, 1)));
     }
 
     [TestMethod]
@@ -65,7 +57,11 @@ public class StatementLocationTests
     {
         var s = new StatementLocation(5, 2, 7, 3);
         s.Grow(40, 25);
-        Assert.IsTrue(s.Is(6, 2, 7, 3));
+        Assert.IsTrue(s.Is(5, 2, 8, 3));
+
+        s = new StatementLocation(5, 2, 39, 3);
+        s.Grow(40, 25);
+        Assert.IsTrue(s.Is(5, 2, 0, 4));
     }
 
     [TestMethod]

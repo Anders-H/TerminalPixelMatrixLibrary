@@ -640,22 +640,22 @@ public partial class TerminalMatrixControl : UserControl
             {
                 case PreviousInputCategory.Back:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Delete:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Tab:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.CursorMovement:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.RegularCharacter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -667,129 +667,129 @@ public partial class TerminalMatrixControl : UserControl
             {
                 case PreviousInputCategory.Back:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Delete:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Tab:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.CursorMovement:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.RegularCharacter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        
         if (StatementLocations.LastInputWasTab)
         {
             switch (StatementLocations.Previous)
             {
                 case PreviousInputCategory.Back:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Delete:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Tab:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.CursorMovement:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.RegularCharacter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        
         if (StatementLocations.LastInputWasEnter)
         {
             switch (StatementLocations.Previous)
             {
                 case PreviousInputCategory.Back:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Delete:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Tab:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.CursorMovement:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.RegularCharacter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        
         if (StatementLocations.LastInputWasCursorMovement)
         {
             switch (StatementLocations.Previous)
             {
                 case PreviousInputCategory.Back:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Delete:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Tab:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.CursorMovement:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.RegularCharacter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        
         if (StatementLocations.LastInputWasRegularCharacter)
         {
             switch (StatementLocations.Previous)
             {
                 case PreviousInputCategory.Back:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Delete:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Tab:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.Enter:
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    break;
+                    return;
                 case PreviousInputCategory.CursorMovement:
                     CurrentStatementLocation = StatementLocations.FindStatementLocationFromPosition(x, y);
-                    break;
+                    return;
                 case PreviousInputCategory.RegularCharacter:
-                    if ((x == 0 || x == 1) && y == 0)
+                    if (x is 0 or 1 && y == 0)
                     {
                         CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(0, 0);
                     }
@@ -805,11 +805,13 @@ public partial class TerminalMatrixControl : UserControl
                         CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(0, y);
                     }
 
-                    break;
+                    return;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
+
+        throw new ArgumentOutOfRangeException();
     }
 
     public int CharactersWidth =>

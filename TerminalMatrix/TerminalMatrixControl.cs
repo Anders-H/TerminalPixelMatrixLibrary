@@ -625,6 +625,10 @@ public partial class TerminalMatrixControl : UserControl
     {
         _keypressHandler.HandleKeyPress(e, TypeCharacter, out var lastInputWasRegularCharacter);
         StatementLocations.LastInputWasRegularCharacter = lastInputWasRegularCharacter;
+
+        if (!StatementLocations.LastInputWasRegularCharacter && e.KeyChar == 13)
+            StatementLocations.LastInputWasEnter = true;
+
         HandleStatementLocation();
         base.OnKeyPress(e);
     }
@@ -633,6 +637,8 @@ public partial class TerminalMatrixControl : UserControl
     {
         var x = CursorPosition.X;
         var y = CursorPosition.Y;
+        var columns = _characterMap.GetLength(0);
+        var rows = _characterMap.GetLength(1);
 
         if (StatementLocations.LastInputWasBack)
         {
@@ -786,7 +792,7 @@ public partial class TerminalMatrixControl : UserControl
                     System.Diagnostics.Debug.WriteLine("Unhandled situation.");
                     return;
                 case PreviousInputCategory.CursorMovement:
-                    CurrentStatementLocation = StatementLocations.FindStatementLocationFromPosition(x, y);
+                    CurrentStatementLocation = StatementLocations.FindStatementLocationFromPosition(x, y, columns, rows, _characterMap);
                     return;
                 case PreviousInputCategory.RegularCharacter:
                     if (x is 0 or 1 && y == 0)

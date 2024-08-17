@@ -1,4 +1,6 @@
-﻿using PixelmapLibrary;
+﻿using Microsoft.VisualBasic.CompilerServices;
+using PixelmapLibrary;
+using TerminalMatrix.Definitions;
 
 namespace TerminalMatrix.StatementManagement;
 
@@ -19,6 +21,36 @@ public class StatementLocation
         InputStartY = inputStartY;
         InputEndX = inputEndX;
         InputEndY = inputEndY;
+    }
+
+    public CharacterPosition StartPosition =>
+        new(InputStartX, InputStartY);
+
+    public void SetStartPosition(int x, int y)
+    {
+        InputStartX = x;
+        InputStartY = y;
+    }
+
+    public void SetStartPosition(CharacterPosition position)
+    {
+        InputStartX = position.X;
+        InputStartY = position.Y;
+    }
+
+    public CharacterPosition EndPosition =>
+        new(InputEndX, InputEndY);
+
+    public void SetEndPosition(int x, int y)
+    {
+        InputEndX = x;
+        InputEndY = y;
+    }
+
+    public void SetEndPosition(CharacterPosition position)
+    {
+        InputEndX = position.X;
+        InputEndY = position.Y;
     }
 
     public void Draw(Pixelmap pixelmap, int borderWidth, int borderHeight, bool current)
@@ -141,6 +173,32 @@ public class StatementLocation
 
         InputEndX = 0;
         InputEndY++;
+    }
+
+    public void Merge(StatementLocation other)
+    {
+        if (StartPosition > other.StartPosition)
+            SetStartPosition(other.StartPosition);
+
+        if (EndPosition < other.EndPosition)
+            SetEndPosition(other.EndPosition);
+    }
+
+    public static void BackOne(ref int x, ref int y, int columns, int rows)
+    {
+        x--;
+
+        if (x >= 0)
+            return;
+
+        x = columns - 1;
+        y--;
+
+        if (y >= 0)
+            return;
+
+        x = 0;
+        y = 0;
     }
 
     public override string ToString() =>

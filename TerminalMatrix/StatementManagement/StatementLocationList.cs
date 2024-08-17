@@ -68,7 +68,7 @@ public class StatementLocationList : List<StatementLocation>
         return result;
     }
 
-    public StatementLocation FindStatementLocationFromPosition(int x, int y)
+    public StatementLocation FindStatementLocationFromPosition(int x, int y, int columns, int rows, byte[,] characterMap)
     {
         if (x == 0 && y == 0)
             return GetStatementLocationFromPosition(0, 0);
@@ -81,7 +81,7 @@ public class StatementLocationList : List<StatementLocation>
         result = this.FirstOrDefault(s => s.InputEndY == y);
 
         if (result == null)
-            return GetStatementLocationFromPosition(x, y);
+            return CreateStatementLocationOnRow(x, y, columns, rows, characterMap);
 
         if (result.InputEndX < x && x > 0)
         {
@@ -89,7 +89,59 @@ public class StatementLocationList : List<StatementLocation>
             return result;
         }
 
+        StatementLocation.BackOne(ref x, ref y, columns, rows);
         return GetStatementLocationFromPosition(x, y);
+    }
+
+    private StatementLocation CreateStatementLocationOnRow(int x, int y, int columns, int rows, byte[,] characterMap)
+    {
+        if (x == 0 && y == 0)
+            return GetStatementLocationFromPosition(0, 0);
+
+        if (Count == 0)
+            return GetStatementLocationFromPosition(x, y);
+
+        if (x == 0)
+        {
+            StatementLocation.BackOne(ref x, ref y, columns, rows);
+            return GetStatementLocationFromPosition(x, y);
+        }
+
+        var statementLocationsOnSameRow = this.Where(s => s.HitTest(x, y)).ToList();
+
+        if (statementLocationsOnSameRow.Count == 0)
+        {
+            StatementLocation.BackOne(ref x, ref y, columns, rows);
+            return GetStatementLocationFromPosition(x, y);
+        }
+
+        foreach (var statementLocation in statementLocationsOnSameRow)
+            Remove(statementLocation);
+
+        var result = statementLocationsOnSameRow.First();
+
+        if (statementLocationsOnSameRow.Count > 1)
+        {
+            for (var i = 1; i < statementLocationsOnSameRow.Count; i++)
+                result.Merge(statementLocationsOnSameRow[i]);
+        }
+
+        if (y == result.InputStartY)
+        {
+            var startX = GetDataStart(characterMap, y);
+
+            if (startX < result.InputStartX)
+                result.InputStartX = startX;
+        }
+        else if (y == result.InputEndY)
+        {
+            var startX = GetDataEnd(characterMap, y);
+
+            if (startX > result.InputEndX)
+                result.InputEndX = startX;
+        }
+
+        return result;
     }
 
     public void Scroll()
@@ -110,5 +162,15 @@ public class StatementLocationList : List<StatementLocation>
                 break;
             }
         } while (repeat);
+    }
+
+    private int GetDataStart(byte[,] c, int row)
+    {
+        return 0;
+    }
+
+    private int GetDataEnd(byte[,] c, int row)
+    {
+        return 0;
     }
 }

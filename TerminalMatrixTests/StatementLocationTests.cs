@@ -72,13 +72,15 @@ public class StatementLocationTests
             new(5, 2, 7, 3)
         };
 
+        var x = new byte[40, 25];
+
         Assert.AreEqual(1, statementLocations.Count);
-        var x1 = statementLocations.FindStatementLocationFromPosition(10, 10);
+        var x1 = statementLocations.FindStatementLocationFromPosition(10, 10, 40, 25, x);
         Assert.IsTrue(x1.Is(10, 10, 10, 10));
         Assert.AreEqual(2, statementLocations.Count);
         Assert.IsTrue(statementLocations[0].Is(5, 2, 7, 3));
         Assert.IsTrue(statementLocations[1].Is(10, 10, 10, 10));
-        var x2 = statementLocations.FindStatementLocationFromPosition(10, 3);
+        var x2 = statementLocations.FindStatementLocationFromPosition(10, 3, 40, 25, x);
         Assert.IsTrue(x2.Is(5, 2, 9, 3));
         Assert.AreEqual(2, statementLocations.Count);
         Assert.IsTrue(statementLocations[0].Is(5, 2, 9, 3));

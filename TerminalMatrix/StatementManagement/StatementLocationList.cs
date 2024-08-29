@@ -56,6 +56,9 @@ public class StatementLocationList : List<StatementLocation>
             s.Draw(pixelmap, borderWidth, borderHeight, current == s);
     }
 
+    public StatementLocation? GetStatementLocationFromPositionIfExists(int x, int y) =>
+        this.FirstOrDefault(s => s.HitTest(x, y));
+
     public StatementLocation GetStatementLocationFromPosition(int x, int y)
     {
         var result = this.FirstOrDefault(s => s.HitTest(x, y));
@@ -110,10 +113,7 @@ public class StatementLocationList : List<StatementLocation>
         var statementLocationsOnSameRow = this.Where(s => s.HitTest(x, y)).ToList();
 
         if (statementLocationsOnSameRow.Count == 0)
-        {
-            StatementLocation.BackOne(ref x, ref y, columns, rows);
             return GetStatementLocationFromPosition(x, y);
-        }
 
         foreach (var statementLocation in statementLocationsOnSameRow)
             Remove(statementLocation);
@@ -166,11 +166,31 @@ public class StatementLocationList : List<StatementLocation>
 
     private int GetDataStart(byte[,] c, int row)
     {
-        return 0;
+        var cols = c.GetLength(0);
+
+        for (var x = 0; x < cols; x++)
+        {
+            if (c[x, row] <= 0 || c[x, row] == 32)
+                continue;
+
+            return x;
+        }
+
+        return cols - 1;
     }
 
     private int GetDataEnd(byte[,] c, int row)
     {
+        var cols = c.GetLength(0);
+
+        for (var x = cols - 1; x >= 0; x--)
+        {
+            if (c[x, row] <= 0 || c[x, row] == 32)
+                continue;
+
+            return x;
+        }
+
         return 0;
     }
 }

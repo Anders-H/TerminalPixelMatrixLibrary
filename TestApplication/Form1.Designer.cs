@@ -42,7 +42,7 @@
             terminalMatrixControl1.Location = new Point(0, 0);
             terminalMatrixControl1.Name = "terminalMatrixControl1";
             terminalMatrixControl1.RenderingMode = TerminalMatrix.RenderingMode.HighSpeed;
-            terminalMatrixControl1.Size = new Size(1054, 691);
+            terminalMatrixControl1.Size = new Size(570, 316);
             terminalMatrixControl1.TabIndex = 0;
             terminalMatrixControl1.UnlimitedInput = true;
             terminalMatrixControl1.Use32BitForeground = false;
@@ -57,7 +57,7 @@
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1054, 691);
+            ClientSize = new Size(570, 316);
             Controls.Add(terminalMatrixControl1);
             DoubleBuffered = true;
             Name = "Form1";

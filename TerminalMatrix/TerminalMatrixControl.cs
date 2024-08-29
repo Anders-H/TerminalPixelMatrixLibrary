@@ -799,6 +799,21 @@ public partial class TerminalMatrixControl : UserControl
                     {
                         CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(0, 0);
                     }
+                    else if (x == 0 && y > 0)
+                    {
+                        var s = StatementLocations.GetStatementLocationFromPositionIfExists(CharactersWidth - 1, y - 1);
+
+                        if (s == null)
+                        {
+                            CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(x, y);
+                        }
+                        else
+                        {
+                            s.Grow(CharactersWidth, CharactersHeight);
+                            CurrentStatementLocation = s;
+                        }
+                        
+                    }
                     else if (x > 1)
                     {
                         CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(x - 2, y);

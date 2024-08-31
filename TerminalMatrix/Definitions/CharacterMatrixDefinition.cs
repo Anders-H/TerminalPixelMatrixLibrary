@@ -44,4 +44,12 @@ public static class CharacterMatrixDefinition
 
         return new byte[Width, Height];
     }
+
+    public static bool[] CreateTerminations(Resolution resolution) =>
+        resolution switch
+        {
+            Resolution.Pixels640x200Characters80x25 or Resolution.Pixels480x200Characters60x25 or Resolution.Pixels320x200Characters40x25 or Resolution.Pixels160x200Characters20x25 => new bool[25],
+            Resolution.LogPixels640x80Characters80x10 => new bool[10],
+            _ => throw new ArgumentOutOfRangeException(nameof(resolution), resolution, null)
+        };
 }

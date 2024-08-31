@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using TerminalMatrix;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.TerminalColor;
@@ -15,6 +16,8 @@ public partial class Form1 : Form
 
     private void terminalMatrixControl1_TypedLine(object sender, TerminalMatrix.Events.TypedLineEventArgs e)
     {
+        Debug.WriteLine($@"Typed line: ""{e.InputValue}""");
+                                                      
         Text = $@"{DateTime.Now.ToShortTimeString()} ""{e.InputValue}""";
 
         if (e.InputValue == "IA")

@@ -7,7 +7,6 @@ using PixelmapLibrary.FontManagement;
 using PixelmapLibrary.SpriteManagement;
 using TerminalMatrix.Definitions;
 using TerminalMatrix.Events;
-using TerminalMatrix.StatementManagement;
 using TerminalMatrix.TerminalColor;
 
 namespace TerminalMatrix;
@@ -21,9 +20,8 @@ public partial class TerminalMatrixControl : UserControl
     public event FunctionKeyPressedDelegate? FunctionKeyPressed;
     public event TickDelegate? Tick;
 
-    private StatementLocationList StatementLocations { get; }
-    private StatementLocation? CurrentStatementLocation { get; set; }
     private DateTime _tickTime;
+    private bool[] _terminations;
     private byte[,] _characterColorMap;
     private byte[,] _characterMap;
     private Pixelmap _pixelMap;
@@ -39,6 +37,7 @@ public partial class TerminalMatrixControl : UserControl
     private Size _border;
     private bool _resolutionIncorrect;
     private bool _use32BitForeground;
+    private bool _overflow;
 
     public RenderingMode RenderingMode { get; set; }
     public Resolution Resolution { get; private set; }
@@ -56,8 +55,7 @@ public partial class TerminalMatrixControl : UserControl
     public TerminalMatrixControl()
 #pragma warning restore CS8618
     {
-        StatementLocations = new StatementLocationList();
-        CurrentStatementLocation = null;
+        _overflow = false;
         _resolutionIncorrect = true;
         _fontMonochromeSprite = FontMonochromeSprite.Create();
         _cursorVisibleBlink = false;
@@ -171,6 +169,7 @@ public partial class TerminalMatrixControl : UserControl
         CursorPosition = new Coordinate(0, 0);
         _characterColorMap = CharacterMatrixDefinition.Create(Resolution);
         _characterMap = CharacterMatrixDefinition.Create(Resolution);
+        _terminations = CharacterMatrixDefinition.CreateTerminations(Resolution);
 
         try
         {
@@ -221,6 +220,9 @@ public partial class TerminalMatrixControl : UserControl
         for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
             for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
                 _characterMap[x, y] = CharacterMatrixDefinition.CharacterEmpty;
+
+        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
+            _terminations[y] = false;
     }
 
     public void ClearPixelMap()
@@ -373,7 +375,6 @@ public partial class TerminalMatrixControl : UserControl
             }
         }
 
-        StatementLocations.Draw(_pixelMap, _border.Width, _border.Height, CurrentStatementLocation);
         overText?.Invoke(_pixelMap);
         _pixelMap.UnlockBits();
         Invalidate();
@@ -429,6 +430,7 @@ public partial class TerminalMatrixControl : UserControl
 
     private void TypeCharacter(char c)
     {
+        _overflow = false;
         _characterMap[CursorPosition.X, CursorPosition.Y] = (byte)c;
         _characterColorMap[CursorPosition.X, CursorPosition.Y] = CurrentCursorColor;
 
@@ -438,6 +440,7 @@ public partial class TerminalMatrixControl : UserControl
         }
         else if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
         {
+            _overflow = true;
             CursorPosition.X = 0;
             CursorPosition.Y++;
         }
@@ -461,47 +464,22 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnPreviewKeyDown(PreviewKeyDownEventArgs e)
     {
-        if (StatementLocations.LastInputWasBack)
-            StatementLocations.Previous = PreviousInputCategory.Back;
-        else if (StatementLocations.LastInputWasDelete)
-            StatementLocations.Previous = PreviousInputCategory.Delete;
-        else if (StatementLocations.LastInputWasTab)
-            StatementLocations.Previous = PreviousInputCategory.Tab;
-        else if (StatementLocations.LastInputWasEnter)
-            StatementLocations.Previous = PreviousInputCategory.Enter;
-        else if (StatementLocations.LastInputWasCursorMovement)
-            StatementLocations.Previous = PreviousInputCategory.CursorMovement;
-        else if (StatementLocations.LastInputWasRegularCharacter)
-            StatementLocations.Previous = PreviousInputCategory.RegularCharacter;
-
-        StatementLocations.LastInputWasBack = false;
-        StatementLocations.LastInputWasDelete = false;
-        StatementLocations.LastInputWasTab = false;
-        StatementLocations.LastInputWasEnter = false;
-        StatementLocations.LastInputWasCursorMovement = false;
-        StatementLocations.LastInputWasRegularCharacter = false;
-
         switch (e.KeyCode)
         {
             case Keys.Tab:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasTab = true;
                 break;
             case Keys.Up:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasCursorMovement = true;
                 break;
             case Keys.Right:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasCursorMovement = true;
                 break;
             case Keys.Down:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasCursorMovement = true;
                 break;
             case Keys.Left:
                 e.IsInputKey = true;
-                StatementLocations.LastInputWasCursorMovement = true;
                 break;
         }
 
@@ -512,14 +490,13 @@ public partial class TerminalMatrixControl : UserControl
     {
         if (e.KeyCode == Keys.Back)
         {
-            StatementLocations.LastInputWasBack = true;
             var limit = TerminalState.InputMode ? TerminalState.InputStartX : 0;
 
             if (CursorPosition.X > limit)
             {
                 CursorPosition.X--;
-                DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
-                DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
+                DoDelete(_characterMap, _terminations, CharacterMatrixDefinition.CharacterEmpty);
+                DoDelete(_characterColorMap, null, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
                 ShowEffect();
             }
 
@@ -572,7 +549,6 @@ public partial class TerminalMatrixControl : UserControl
                 if (TerminalState.InputMode)
                     return;
 
-                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.Y = CharacterMatrixDefinition.TextRenderLimit;
                 ShowEffect();
                 break;
@@ -581,28 +557,25 @@ public partial class TerminalMatrixControl : UserControl
                 if (TerminalState.InputMode)
                     return;
 
-                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.Y = CharacterMatrixDefinition.Height - 1;
                 ShowEffect();
                 break;
             case Keys.Home:
-                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.X = TerminalState.InputMode ? TerminalState.InputStartX : 0;
                 ShowEffect();
                 break;
             case Keys.End:
-                StatementLocations.LastInputWasCursorMovement = true;
                 CursorPosition.X = CharacterMatrixDefinition.Width - 1;
                 ShowEffect();
                 break;
             case Keys.Insert:
-                DoInsert(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
-                DoInsert(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
+                DoInsert(_characterMap, _terminations, CharacterMatrixDefinition.CharacterEmpty);
+                DoInsert(_characterColorMap, null, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
                 ShowEffect();
                 break;
             case Keys.Delete:
-                DoDelete(_characterMap, CharacterMatrixDefinition.CharacterEmpty);
-                DoDelete(_characterColorMap, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
+                DoDelete(_characterMap, _terminations, CharacterMatrixDefinition.CharacterEmpty);
+                DoDelete(_characterColorMap, null, _characterColorMap[CursorPosition.X, CursorPosition.Y]);
                 ShowEffect();
                 break;
             default:
@@ -624,215 +597,7 @@ public partial class TerminalMatrixControl : UserControl
     protected override void OnKeyPress(KeyPressEventArgs e)
     {
         _keypressHandler.HandleKeyPress(e, TypeCharacter, out var lastInputWasRegularCharacter);
-        StatementLocations.LastInputWasRegularCharacter = lastInputWasRegularCharacter;
-
-        if (!StatementLocations.LastInputWasRegularCharacter && e.KeyChar == 13)
-            StatementLocations.LastInputWasEnter = true;
-
-        HandleStatementLocation();
         base.OnKeyPress(e);
-    }
-
-    private void HandleStatementLocation()
-    {
-        var x = CursorPosition.X;
-        var y = CursorPosition.Y;
-        var columns = _characterMap.GetLength(0);
-        var rows = _characterMap.GetLength(1);
-
-        if (StatementLocations.LastInputWasBack)
-        {
-            switch (StatementLocations.Previous)
-            {
-                case PreviousInputCategory.Back:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Delete:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Tab:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Enter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.CursorMovement:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.RegularCharacter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        if (StatementLocations.LastInputWasDelete)
-        {
-            switch (StatementLocations.Previous)
-            {
-                case PreviousInputCategory.Back:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Delete:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Tab:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Enter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.CursorMovement:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.RegularCharacter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-        
-        if (StatementLocations.LastInputWasTab)
-        {
-            switch (StatementLocations.Previous)
-            {
-                case PreviousInputCategory.Back:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Delete:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Tab:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Enter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.CursorMovement:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.RegularCharacter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-        
-        if (StatementLocations.LastInputWasEnter)
-        {
-            switch (StatementLocations.Previous)
-            {
-                case PreviousInputCategory.Back:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Delete:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Tab:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Enter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.CursorMovement:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.RegularCharacter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-        
-        if (StatementLocations.LastInputWasCursorMovement)
-        {
-            switch (StatementLocations.Previous)
-            {
-                case PreviousInputCategory.Back:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Delete:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Tab:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Enter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.CursorMovement:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.RegularCharacter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-        
-        if (StatementLocations.LastInputWasRegularCharacter)
-        {
-            switch (StatementLocations.Previous)
-            {
-                case PreviousInputCategory.Back:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Delete:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Tab:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.Enter:
-                    System.Diagnostics.Debug.WriteLine("Unhandled situation.");
-                    return;
-                case PreviousInputCategory.CursorMovement:
-                    CurrentStatementLocation = StatementLocations.FindStatementLocationFromPosition(x, y, columns, rows, _characterMap);
-                    return;
-                case PreviousInputCategory.RegularCharacter:
-                    if (x is 0 or 1 && y == 0)
-                    {
-                        CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(0, 0);
-                    }
-                    else if (x == 0 && y > 0)
-                    {
-                        var s = StatementLocations.GetStatementLocationFromPositionIfExists(CharactersWidth - 1, y - 1);
-
-                        if (s == null)
-                        {
-                            CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(x, y);
-                        }
-                        else
-                        {
-                            s.Grow(CharactersWidth, CharactersHeight);
-                            CurrentStatementLocation = s;
-                        }
-                        
-                    }
-                    else if (x > 1)
-                    {
-                        CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(x - 2, y);
-                        
-                        if (CurrentStatementLocation != null && CurrentStatementLocation.InputEndX < x - 1)
-                            CurrentStatementLocation.Grow(CharactersWidth, CharactersHeight);
-                    }
-                    else if (x == 1)
-                    {
-                        CurrentStatementLocation = StatementLocations.GetStatementLocationFromPosition(0, y);
-                    }
-
-                    return;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
-
-        throw new ArgumentOutOfRangeException();
     }
 
     public int CharactersWidth =>
@@ -847,11 +612,59 @@ public partial class TerminalMatrixControl : UserControl
         var fireEventTypedLine = false;
         var inputValue = new StringBuilder();
 
+        // Start: Register a termination
+        if (CursorPosition.Y > 0)
+        {
+            if (CursorPosition.X == 0)
+            {
+                if (_overflow)
+                {
+                    _terminations[CursorPosition.Y - 1] = false;
+                    _terminations[CursorPosition.Y] = true;
+                }
+                else
+                {
+                    _terminations[CursorPosition.Y] = true;
+                }
+            }
+            else
+            {
+                _terminations[CursorPosition.Y] = true;
+            }
+        }
+        // End: Register a termination
+
         var start = TerminalState.InputMode ? TerminalState.InputStartX : 0;
+
+
+        if (_overflow && CursorPosition.Y > 0)
+        {
+            CursorPosition.Y--;
+        }
+
+        _overflow = false;
+
+        var y = CursorPosition.Y;
+
+        if (!HasTerminator(y - 1))
+        {
+            inputValue.Append(GetData(y - 1));
+
+            if (!HasTerminator(y - 2))
+            {
+                inputValue.Insert(0, GetData(y - 2));
+
+                if (!HasTerminator(y - 3))
+                {
+                    inputValue.Insert(0, GetData(y - 3));
+                }
+            }
+
+        }
 
         for (var x = start; x < CharacterMatrixDefinition.Width; x++)
         {
-            var c = _characterMap[x, CursorPosition.Y];
+            var c = _characterMap[x,y];
 
             if (c != 0)
                 inputValue.Append(_codePage.Chr[c]);
@@ -901,7 +714,23 @@ public partial class TerminalMatrixControl : UserControl
             TypedLine?.Invoke(this, eventArgs!);
     }
 
-    private void DoInsert(byte[,] map, byte empty)
+    private bool HasTerminator(int y)
+    {
+        if (y <= 0)
+            return true;
+
+        if (y >= _characterMap.GetLength(1))
+            return true;
+
+        return false;
+    }
+
+    private string GetData(int y)
+    {
+
+    }
+
+    private void DoInsert(byte[,] map, bool[]? terminations, byte empty) // Accepts the terminations array just in case it is needed.
     {
         if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
         {
@@ -915,7 +744,7 @@ public partial class TerminalMatrixControl : UserControl
         map[CursorPosition.X, CursorPosition.Y] = empty;
     }
 
-    private void DoDelete(byte[,] map, byte empty)
+    private void DoDelete(byte[,] map, bool[]? terminations, byte empty) // Accepts the terminations array just in case it is needed.
     {
         if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
         {
@@ -996,7 +825,6 @@ public partial class TerminalMatrixControl : UserControl
     {
         ScrollCharacterMap(_characterColorMap, CurrentCursorColor);
         ScrollCharacterMap(_characterMap, (byte)' ');
-        StatementLocations.Scroll();
     }
 
     private void ScrollCharacterMap(byte[,] characterMap, byte blank)

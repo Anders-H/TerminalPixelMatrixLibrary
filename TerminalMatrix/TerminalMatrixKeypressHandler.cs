@@ -6,7 +6,7 @@ namespace TerminalMatrix;
 internal class TerminalMatrixKeypressHandler
 {
     private readonly TerminalMatrixControl _owner;
-
+    
     internal TerminalMatrixKeypressHandler(TerminalMatrixControl owner)
     {
         _owner = owner;

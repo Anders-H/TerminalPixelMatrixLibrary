@@ -624,7 +624,8 @@ public partial class TerminalMatrixControl : UserControl
                 }
                 else
                 {
-                    _terminations[CursorPosition.Y] = true;
+                    if (!IsSurroundedByTerminations(CursorPosition.Y))
+                        _terminations[CursorPosition.Y] = true;
                 }
             }
             else
@@ -714,20 +715,89 @@ public partial class TerminalMatrixControl : UserControl
             TypedLine?.Invoke(this, eventArgs!);
     }
 
-    private bool HasTerminator(int y)
+    private bool IsSurroundedByTerminations(int y)
     {
-        if (y <= 0)
+        var yStart = y;
+
+        for (var i = 1; i < 4; i++)
+        {
+            if (HasTerminator(y - i))
+            {
+                yStart = y - i;
+                break;
+            }
+            else if (IsBlankLine(y - i))
+            {
+                if (y - i >= 0)
+                    _terminations[y - i] = true;
+            }
+        }
+
+        var yEnd = y;
+
+        for (var i = 0; i < 4; i++)
+        {
+            if (HasTerminator(y + 1))
+            {
+                yEnd = y + i;
+                break;
+            }
+        }
+
+        return yStart - yEnd <= 4;
+    }
+
+    private bool IsBlankLine(int y)
+    {
+        if (y < 0 || y >= CharacterMatrixDefinition.Height)
             return true;
 
-        if (y >= _characterMap.GetLength(1))
-            return true;
+        return !HasData(y);
+    }
+
+    private bool HasData(int y)
+    {
+        if (y < 0 || y >= CharacterMatrixDefinition.Height)
+            return false;
+
+        for (var i = 0; i < CharacterMatrixDefinition.Width; i++)
+        {
+            if (_characterMap[i, y] > 0 && _characterMap[i, y] != 32)
+                return true;
+        }
 
         return false;
     }
 
+    private bool HasTerminator(int y)
+    {
+        if (y < 0)
+            return true;
+
+        if (y >= CharacterMatrixDefinition.Height)
+            return true;
+
+        return _terminations[y];
+    }
+
     private string GetData(int y)
     {
+        var foundDataAt = -1;
+        var result = new StringBuilder();
 
+        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+        {
+            if (foundDataAt < 0 && _characterMap[x, y] > 0 && _characterMap[x, y] != 32)
+                foundDataAt = x;
+
+            if (foundDataAt >= 0)
+            {
+                var c = _characterMap[x, y] <= 0 ? ' ' : (char)_characterMap[x, y];
+                result.Append(c);
+            }
+        }
+
+        return foundDataAt > 0 ? $@" {result.ToString().Trim()}" : result.ToString().Trim();
     }
 
     private void DoInsert(byte[,] map, bool[]? terminations, byte empty) // Accepts the terminations array just in case it is needed.

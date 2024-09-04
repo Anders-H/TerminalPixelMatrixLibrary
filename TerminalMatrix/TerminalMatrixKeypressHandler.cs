@@ -12,17 +12,10 @@ internal class TerminalMatrixKeypressHandler
         _owner = owner;
     }
 
-    internal void HandleKeyPress(KeyPressEventArgs e, Action<char> typeCharacter, out bool lastInputWasRegularCharacter)
+    internal void HandleKeyPress(KeyPressEventArgs e, Action<char> typeCharacter)
     {
         if (TerminalCodePage.Characters.IndexOf(e.KeyChar) >= 0)
-        {
-            lastInputWasRegularCharacter = true;
             typeCharacter(e.KeyChar);
-        }
-        else
-        {
-            lastInputWasRegularCharacter = false;
-        }
     }
 
     internal void HandleKeyDown(KeyEventArgs e, bool inputMode, int inputStartX, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)

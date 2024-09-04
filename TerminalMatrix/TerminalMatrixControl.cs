@@ -596,15 +596,9 @@ public partial class TerminalMatrixControl : UserControl
 
     protected override void OnKeyPress(KeyPressEventArgs e)
     {
-        _keypressHandler.HandleKeyPress(e, TypeCharacter, out var lastInputWasRegularCharacter);
+        _keypressHandler.HandleKeyPress(e, TypeCharacter);
         base.OnKeyPress(e);
     }
-
-    public int CharactersWidth =>
-        _characterMap.GetLength(0);
-
-    public int CharactersHeight =>
-        _characterMap.GetLength(1);
 
     internal void HandleEnter(bool shift)
     {
@@ -630,7 +624,8 @@ public partial class TerminalMatrixControl : UserControl
             }
             else
             {
-                _terminations[CursorPosition.Y] = true;
+                if (!IsSurroundedByTerminations(CursorPosition.Y))
+                    _terminations[CursorPosition.Y] = true;
             }
         }
         // End: Register a termination
@@ -665,10 +660,35 @@ public partial class TerminalMatrixControl : UserControl
 
         for (var x = start; x < CharacterMatrixDefinition.Width; x++)
         {
-            var c = _characterMap[x,y];
+            var c = _characterMap[x, y];
 
             if (c != 0)
                 inputValue.Append(_codePage.Chr[c]);
+        }
+
+        if (inputValue.Length < CharacterMatrixDefinition.Width * 4 && !HasTerminator(y + 1)) // BUG IS HERE!!!!!
+        {
+            var aftermath = new StringBuilder();
+            var done = false;
+
+            while (inputValue.Length + aftermath.Length < CharacterMatrixDefinition.Width * 4 && !done)
+            {
+                for (var i = 1; i < 4; i++)
+                {
+                    
+                    if (HasTerminator(y))
+                    {
+                        done = true;
+                        break;
+                    }
+
+                    aftermath.Append(GetData(y + i));
+                }
+
+                done = true;
+            }
+
+            inputValue.Append(aftermath.ToString());
         }
 
         var v = inputValue.ToString().Trim();
@@ -726,7 +746,8 @@ public partial class TerminalMatrixControl : UserControl
                 yStart = y - i;
                 break;
             }
-            else if (IsBlankLine(y - i))
+
+            if (IsBlankLine(y - i))
             {
                 if (y - i >= 0)
                     _terminations[y - i] = true;

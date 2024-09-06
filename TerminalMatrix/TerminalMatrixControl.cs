@@ -1002,6 +1002,22 @@ public partial class TerminalMatrixControl : UserControl
             WriteLine(programLine.Value.RawString);
     }
 
+    public bool GetTerminator(int y)
+    {
+        if (y < 0 || y >= CharacterMatrixDefinition.Height)
+            return false;
+
+        return _terminations[y];
+    }
+
+    public void SetTerminator(int y, bool terminator)
+    {
+        if (y < 0 || y >= CharacterMatrixDefinition.Height)
+            return;
+
+        _terminations[y] = terminator;
+    }
+
     public void Write(string text) =>
         Write(0, text);
 
@@ -1035,6 +1051,7 @@ public partial class TerminalMatrixControl : UserControl
         }
 
         CursorPosition.X = 0;
+        _terminations[CursorPosition.Y] = true;
 
         if (CursorPosition.CanMoveDown())
             CursorPosition.Y++;

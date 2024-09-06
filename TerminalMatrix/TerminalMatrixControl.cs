@@ -605,87 +605,108 @@ public partial class TerminalMatrixControl : UserControl
         TypedLineEventArgs? eventArgs = null;
         var fireEventTypedLine = false;
         var inputValue = new StringBuilder();
+        var bailAnalyze = false;
+        var y = CursorPosition.Y;
 
         // Start: Register a termination
-        if (CursorPosition.Y > 0)
+        if (y > 0)
         {
             if (CursorPosition.X == 0)
             {
                 if (_overflow)
                 {
-                    _terminations[CursorPosition.Y - 1] = false;
-                    _terminations[CursorPosition.Y] = true;
+                    _terminations[y - 1] = false;
+                    _terminations[y] = true;
                 }
                 else
                 {
-                    if (!IsSurroundedByTerminations(CursorPosition.Y))
-                        _terminations[CursorPosition.Y] = true;
+                    if (!IsSurroundedByTerminations(y))
+                        _terminations[y] = true;
+                    else if (!HasData(y))
+                        bailAnalyze = true;
                 }
             }
             else
             {
-                if (!IsSurroundedByTerminations(CursorPosition.Y))
-                    _terminations[CursorPosition.Y] = true;
+                if (!IsSurroundedByTerminations(y))
+                    _terminations[y] = true;
+                else if (HasTerminator(y - 1) && CursorPosition.X < CharacterMatrixDefinition.Width)
+                    _terminations[y] = true;
             }
+        }
+        else
+        {
+            if (!IsSurroundedByTerminations(y))
+                _terminations[y] = true;
+            else if (HasTerminator(y - 1) && CursorPosition.X < CharacterMatrixDefinition.Width)
+                _terminations[y] = true;
         }
         // End: Register a termination
 
-        var start = TerminalState.InputMode ? TerminalState.InputStartX : 0;
-
-
-        if (_overflow && CursorPosition.Y > 0)
+        if (!bailAnalyze)
         {
-            CursorPosition.Y--;
-        }
+            var start = TerminalState.InputMode ? TerminalState.InputStartX : 0;
 
-        _overflow = false;
-
-        var y = CursorPosition.Y;
-
-        if (!HasTerminator(y - 1))
-        {
-            inputValue.Append(GetData(y - 1));
-
-            if (!HasTerminator(y - 2))
+            if (_overflow && y > 0)
             {
-                inputValue.Insert(0, GetData(y - 2));
-
-                if (!HasTerminator(y - 3))
-                {
-                    inputValue.Insert(0, GetData(y - 3));
-                }
+                y--;
             }
 
+            _overflow = false;
+
+            if (!HasTerminator(y - 1))
+            {
+                inputValue.Append(GetData(y - 1));
+
+                if (!HasTerminator(y - 2))
+                {
+                    inputValue.Insert(0, GetData(y - 2));
+
+                    if (!HasTerminator(y - 3))
+                    {
+                        inputValue.Insert(0, GetData(y - 3));
+                    }
+                }
+
+            }
+
+            for (var x = start; x < CharacterMatrixDefinition.Width; x++)
+            {
+                var c = _characterMap[x, y];
+
+                if (c != 0)
+                    inputValue.Append(_codePage.Chr[c]);
+            }
         }
 
-        for (var x = start; x < CharacterMatrixDefinition.Width; x++)
-        {
-            var c = _characterMap[x, y];
-
-            if (c != 0)
-                inputValue.Append(_codePage.Chr[c]);
-        }
-
-        if (inputValue.Length < CharacterMatrixDefinition.Width * 4 && !HasTerminator(y + 1)) // BUG IS HERE!!!!!
+        if (bailAnalyze || (inputValue.Length < CharacterMatrixDefinition.Width * 4 && !HasTerminator(y)))
         {
             var aftermath = new StringBuilder();
-            var done = false;
+            bool done = false;
 
             while (inputValue.Length + aftermath.Length < CharacterMatrixDefinition.Width * 4 && !done)
             {
+                done = false;
+
                 for (var i = 1; i < 4; i++)
                 {
-                    
-                    if (HasTerminator(y))
+                    if (!HasData(y + i))
                     {
                         done = true;
                         break;
                     }
 
-                    aftermath.Append(GetData(y + i));
+                    if (HasTerminator(y + i))
+                    {
+                        aftermath.Append(GetData(y + i));
+                        done = true;
+                        break;
+                    }
+                    else
+                    {
+                        aftermath.Append(GetData(y + i));
+                    }
                 }
-
-                done = true;
             }
 
             inputValue.Append(aftermath.ToString());

@@ -11,6 +11,9 @@ Install-Package TerminalMatrix
 
 For adding text to the terminal matrix, use the `WriteLine` method. To prompt the user, use the `Input` method.
 
+This library is used by [A-BASIC-Language](https://github.com/tomas-hakansson/A-BASIC-Language) and it
+is using [PixelmapLibrary](https://github.com/Anders-H/PixelmapLibrary) for fast bitmap graphics.
+
 ## Limit text area
 
 When the text area is unlimited, the text terminal displays 25 lines of text.

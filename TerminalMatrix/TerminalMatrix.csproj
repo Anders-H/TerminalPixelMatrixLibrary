@@ -8,14 +8,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>2.7.1</Version>
+		<Version>2.7.2</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>2.7.1</AssemblyVersion>
-		<FileVersion>2.7.1</FileVersion>
+		<AssemblyVersion>2.7.2</AssemblyVersion>
+		<FileVersion>2.7.2</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>terminal.png</PackageIcon>
-		<PackageReleaseNotes>Functions for reading and writing statement terminators.</PackageReleaseNotes>
+		<PackageReleaseNotes>New function to get any program in memory as string (GetProgramAsString).</PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/Anders-H/TerminalPixelMatrixLibrary</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>

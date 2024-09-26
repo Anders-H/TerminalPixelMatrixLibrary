@@ -34,6 +34,10 @@ public partial class Form1 : Form
             terminalMatrixControl1.SetStartPosition(20, 10);
             terminalMatrixControl1.UpdateBitmap();
         }
+        else if (e.InputValue == "CODE")
+        {
+            MessageBox.Show(terminalMatrixControl1.GetProgramAsString());
+        }
         else if (e.InputValue == "BOX")
         {
             terminalMatrixControl1.Box(ColorName.White, 0, 0, 319, 199);

@@ -33,7 +33,7 @@
             // 
             // terminalMatrixControl1
             // 
-            terminalMatrixControl1.AutoProgramManagement = false;
+            terminalMatrixControl1.AutoProgramManagement = true;
             terminalMatrixControl1.BorderHeight = 20;
             terminalMatrixControl1.BorderWidth = 20;
             terminalMatrixControl1.ControlOverlayPainter = null;

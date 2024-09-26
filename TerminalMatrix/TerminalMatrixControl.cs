@@ -1132,6 +1132,21 @@ public partial class TerminalMatrixControl : UserControl
         } while (true);
     }
 
+    public string GetProgramAsString()
+    {
+        if (ProgramLines.Count <= 0)
+            return "";
+
+        var s = new StringBuilder();
+
+        foreach (var line in ProgramLines)
+        {
+            s.AppendLine($"{line.Key} {line.Value.Code}");
+        }
+
+        return s.ToString();
+    }
+
     public void New() =>
         ProgramLines.Clear();
 

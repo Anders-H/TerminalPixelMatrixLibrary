@@ -34,6 +34,7 @@ public partial class MainWindow : Form
             terminalMatrixControl1.WriteText("You are in a forest.");
             terminalMatrixControl1.CurrentCursorColor = (int)ColorName.Cyan;
             var input = terminalMatrixControl1.InputString(">");
+            Text = input;
 
             if (input == "QUIT" || terminalMatrixControl1.QuitFlag)
                 quitFlag = true;

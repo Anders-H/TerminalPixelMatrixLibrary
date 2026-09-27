@@ -1,4 +1,4 @@
-﻿using System.Drawing.Drawing2D;
+using System.Drawing.Drawing2D;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -37,7 +37,6 @@ public partial class TerminalMatrixControl : UserControl
     private Size _border;
     private bool _resolutionIncorrect;
     private bool _use32BitForeground;
-    private bool _overflow;
 
     public RenderingMode RenderingMode { get; set; }
     public Resolution Resolution { get; private set; }
@@ -55,7 +54,6 @@ public partial class TerminalMatrixControl : UserControl
     public TerminalMatrixControl()
 #pragma warning restore CS8618
     {
-        _overflow = false;
         _resolutionIncorrect = true;
         _fontMonochromeSprite = FontMonochromeSprite.Create();
         _cursorVisibleBlink = false;
@@ -222,7 +220,7 @@ public partial class TerminalMatrixControl : UserControl
                 _characterMap[x, y] = CharacterMatrixDefinition.CharacterEmpty;
 
         for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
-            _terminations[y] = false;
+            _terminations[y] = true;
     }
 
     public void ClearPixelMap()
@@ -430,7 +428,6 @@ public partial class TerminalMatrixControl : UserControl
 
     private void TypeCharacter(char c)
     {
-        _overflow = false;
         _characterMap[CursorPosition.X, CursorPosition.Y] = (byte)c;
         _characterColorMap[CursorPosition.X, CursorPosition.Y] = CurrentCursorColor;
 
@@ -438,17 +435,23 @@ public partial class TerminalMatrixControl : UserControl
         {
             CursorPosition.X++;
         }
-        else if (CursorPosition.Y < CharacterMatrixDefinition.Height - 1)
-        {
-            _overflow = true;
-            CursorPosition.X = 0;
-            CursorPosition.Y++;
-        }
         else
         {
-            Scroll();
+            // Only an actual wrap joins two physical rows into one logical line.
+            var newContinuation = _terminations[CursorPosition.Y];
+            _terminations[CursorPosition.Y] = false;
+            if (CursorPosition.CanMoveDown())
+                CursorPosition.Y++;
+            else
+                Scroll();
+
             CursorPosition.X = 0;
-            CursorPosition.Y = CharacterMatrixDefinition.Height - 1;
+            if (newContinuation)
+            {
+                ClearLine(_characterMap, CursorPosition.Y, CharacterMatrixDefinition.CharacterEmpty);
+                ClearLine(_characterColorMap, CursorPosition.Y, CurrentCursorColor);
+                _terminations[CursorPosition.Y] = true;
+            }
         }
 
         ShowKeyboardActivity();
@@ -490,7 +493,8 @@ public partial class TerminalMatrixControl : UserControl
     {
         if (e.KeyCode == Keys.Back)
         {
-            var limit = TerminalState.InputMode ? TerminalState.InputStartX : 0;
+            var limit = TerminalState.InputMode && CursorPosition.Y == TerminalState.InputStartY
+                ? TerminalState.InputStartX : 0;
 
             if (CursorPosition.X > limit)
             {
@@ -561,7 +565,8 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             case Keys.Home:
-                CursorPosition.X = TerminalState.InputMode ? TerminalState.InputStartX : 0;
+                CursorPosition.X = TerminalState.InputMode && CursorPosition.Y == TerminalState.InputStartY
+                    ? TerminalState.InputStartX : 0;
                 ShowEffect();
                 break;
             case Keys.End:
@@ -579,7 +584,7 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             default:
-                _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, CursorPosition, ShowKeyboardActivity, Show);
+                _keypressHandler.HandleKeyDown(e, TerminalState.InputMode, TerminalState.InputStartX, TerminalState.InputStartY, CursorPosition, ShowKeyboardActivity, Scroll);
                 break;
         }
 
@@ -602,244 +607,55 @@ public partial class TerminalMatrixControl : UserControl
 
     internal void HandleEnter(bool shift)
     {
-        TypedLineEventArgs? eventArgs = null;
-        var fireEventTypedLine = false;
+        var firstRow = CursorPosition.Y;
+        while (firstRow > 0 && !_terminations[firstRow - 1])
+            firstRow--;
+
+        if (TerminalState.InputMode)
+            firstRow = Math.Max(firstRow, TerminalState.InputStartY);
+
+        var lastRow = CursorPosition.Y;
+        while (lastRow < CharacterMatrixDefinition.Height - 1 && !_terminations[lastRow])
+            lastRow++;
+
         var inputValue = new StringBuilder();
-        var bailAnalyze = false;
-        var y = CursorPosition.Y;
-
-        // Start: Register a termination
-        if (y > 0)
+        for (var y = firstRow; y <= lastRow; y++)
         {
-            if (CursorPosition.X == 0)
-            {
-                if (_overflow)
-                {
-                    _terminations[y - 1] = false;
-                    _terminations[y] = true;
-                }
-                else
-                {
-                    if (!IsSurroundedByTerminations(y))
-                        _terminations[y] = true;
-                    else if (!HasData(y))
-                        bailAnalyze = true;
-                }
-            }
-            else
-            {
-                if (!IsSurroundedByTerminations(y))
-                    _terminations[y] = true;
-                else if (HasTerminator(y - 1) && CursorPosition.X < CharacterMatrixDefinition.Width)
-                    _terminations[y] = true;
-            }
-        }
-        else
-        {
-            if (!IsSurroundedByTerminations(y))
-                _terminations[y] = true;
-            else if (HasTerminator(y - 1) && CursorPosition.X < CharacterMatrixDefinition.Width)
-                _terminations[y] = true;
-        }
-        // End: Register a termination
-
-        if (!bailAnalyze)
-        {
-            var start = TerminalState.InputMode ? TerminalState.InputStartX : 0;
-
-            if (_overflow && y > 0)
-            {
-                y--;
-            }
-
-            _overflow = false;
-
-            if (!HasTerminator(y - 1))
-            {
-                inputValue.Append(GetData(y - 1));
-
-                if (!HasTerminator(y - 2))
-                {
-                    inputValue.Insert(0, GetData(y - 2));
-
-                    if (!HasTerminator(y - 3))
-                    {
-                        inputValue.Insert(0, GetData(y - 3));
-                    }
-                }
-
-            }
-
+            var start = TerminalState.InputMode && y == TerminalState.InputStartY
+                ? TerminalState.InputStartX
+                : 0;
             for (var x = start; x < CharacterMatrixDefinition.Width; x++)
             {
                 var c = _characterMap[x, y];
-
-                if (c != 0)
-                    inputValue.Append(_codePage.Chr[c]);
+                inputValue.Append(c == 0 ? ' ' : _codePage.Chr[c]);
             }
         }
 
-        if (bailAnalyze || (inputValue.Length < CharacterMatrixDefinition.Width * 4 && !HasTerminator(y)))
+        // Trim only the completed logical line, preserving spaces at wrap boundaries.
+        var value = inputValue.ToString().Trim();
+        var programLine = AddProgramLine(value, shift);
+        var inputMode = TerminalState.InputMode;
+        if (inputMode)
         {
-            var aftermath = new StringBuilder();
-            bool done = false;
-
-            while (inputValue.Length + aftermath.Length < CharacterMatrixDefinition.Width * 4 && !done)
-            {
-                done = false;
-
-                for (var i = 1; i < 4; i++)
-                {
-                    if (!HasData(y + i))
-                    {
-                        done = true;
-                        break;
-                    }
-
-                    if (HasTerminator(y + i))
-                    {
-                        aftermath.Append(GetData(y + i));
-                        done = true;
-                        break;
-                    }
-                    else
-                    {
-                        aftermath.Append(GetData(y + i));
-                    }
-                }
-            }
-
-            inputValue.Append(aftermath.ToString());
+            TerminalState.InputMode = false;
+            _lastInput = value;
         }
 
-        var v = inputValue.ToString().Trim();
-
-        if (AddProgramLine(v, shift))
-        {
-            NextLine();
-        }
+        _terminations[lastRow] = true;
+        CursorPosition.Set(0, lastRow);
+        if (CursorPosition.CanMoveDown())
+            CursorPosition.Y++;
         else
-        {
-            eventArgs = new TypedLineEventArgs(v);
+            Scroll();
 
-            if (TerminalState.InputMode)
-            {
-                TerminalState.InputMode = false;
-                _lastInput = v;
-                InputCompleted?.Invoke(this, eventArgs);
-            }
-            else
-            {
-                if (!shift)
-                    fireEventTypedLine = true;
-            }
-
-            NextLine();
-        }
-
-        void NextLine()
-        {
-            CursorPosition.X = 0;
-
-            if (CursorPosition.CanMoveDown())
-                CursorPosition.Y++;
-            else
-                Scroll();
-        }
-
-        _timer.Enabled = false;
-        _cursorVisibleBlink = true;
         ShowKeyboardActivity();
-        _timer.Enabled = true;
 
-        if (fireEventTypedLine)
-            TypedLine?.Invoke(this, eventArgs!);
-    }
-
-    private bool IsSurroundedByTerminations(int y)
-    {
-        var yStart = y;
-
-        for (var i = 1; i < 4; i++)
-        {
-            if (HasTerminator(y - i))
-            {
-                yStart = y - i;
-                break;
-            }
-
-            if (IsBlankLine(y - i))
-            {
-                if (y - i >= 0)
-                    _terminations[y - i] = true;
-            }
-        }
-
-        var yEnd = y;
-
-        for (var i = 0; i < 4; i++)
-        {
-            if (HasTerminator(y + 1))
-            {
-                yEnd = y + i;
-                break;
-            }
-        }
-
-        return yStart - yEnd <= 4;
-    }
-
-    private bool IsBlankLine(int y)
-    {
-        if (y < 0 || y >= CharacterMatrixDefinition.Height)
-            return true;
-
-        return !HasData(y);
-    }
-
-    private bool HasData(int y)
-    {
-        if (y < 0 || y >= CharacterMatrixDefinition.Height)
-            return false;
-
-        for (var i = 0; i < CharacterMatrixDefinition.Width; i++)
-        {
-            if (_characterMap[i, y] > 0 && _characterMap[i, y] != 32)
-                return true;
-        }
-
-        return false;
-    }
-
-    private bool HasTerminator(int y)
-    {
-        if (y < 0)
-            return true;
-
-        if (y >= CharacterMatrixDefinition.Height)
-            return true;
-
-        return _terminations[y];
-    }
-
-    private string GetData(int y)
-    {
-        var foundDataAt = -1;
-        var result = new StringBuilder();
-
-        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
-        {
-            if (foundDataAt < 0 && _characterMap[x, y] > 0 && _characterMap[x, y] != 32)
-                foundDataAt = x;
-
-            if (foundDataAt >= 0)
-            {
-                var c = _characterMap[x, y] <= 0 ? ' ' : (char)_characterMap[x, y];
-                result.Append(c);
-            }
-        }
-
-        return foundDataAt > 0 ? $@" {result.ToString().Trim()}" : result.ToString().Trim();
+        // Both completion callbacks observe the cursor on the next line.
+        var eventArgs = new TypedLineEventArgs(value);
+        if (inputMode)
+            InputCompleted?.Invoke(this, eventArgs);
+        else if (!programLine && !shift)
+            TypedLine?.Invoke(this, eventArgs);
     }
 
     private void DoInsert(byte[,] map, bool[]? terminations, byte empty) // Accepts the terminations array just in case it is needed.
@@ -937,6 +753,17 @@ public partial class TerminalMatrixControl : UserControl
     {
         ScrollCharacterMap(_characterColorMap, CurrentCursorColor);
         ScrollCharacterMap(_characterMap, (byte)' ');
+        Array.Copy(_terminations, 1, _terminations, 0, _terminations.Length - 1);
+        _terminations[^1] = true;
+        if (TerminalState.InputMode)
+        {
+            TerminalState.InputStartY--;
+            if (TerminalState.InputStartY < 0)
+            {
+                TerminalState.InputStartY = 0;
+                TerminalState.InputStartX = 0;
+            }
+        }
     }
 
     private void ScrollCharacterMap(byte[,] characterMap, byte blank)
@@ -967,25 +794,18 @@ public partial class TerminalMatrixControl : UserControl
 
         ClearLine(_characterMap, CursorPosition.Y, CharacterMatrixDefinition.CharacterEmpty);
         ClearLine(_characterColorMap, CursorPosition.Y, CurrentCursorColor);
+        _terminations[CursorPosition.Y] = true;
+        if (CursorPosition.Y > 0)
+            _terminations[CursorPosition.Y - 1] = true;
         CurrentCursorColor = promptColor;
         Write(prompt);
         CurrentCursorColor = valueColor;
         TerminalState.InputStartX = prompt.Length;
-        Write(TerminalState.InputStartX, defaultValue);
-
-        if (prompt.Length == 0)
-        {
-            CursorPosition.X = TerminalState.InputStartX;
-        }
-        else
-        {
-            CursorPosition.X = TerminalState.InputStartX + defaultValue.Length;
-
-            if (CursorPosition.X > CharacterMatrixDefinition.Width - 1)
-                CursorPosition.X = CharacterMatrixDefinition.Width - 1;
-        }
-
+        TerminalState.InputStartY = CursorPosition.Y;
+        CursorPosition.X = TerminalState.InputStartX;
         TerminalState.InputMode = true;
+        foreach (var c in defaultValue)
+            TypeCharacter(c);
         UpdateBitmap();
         Invalidate();
     }

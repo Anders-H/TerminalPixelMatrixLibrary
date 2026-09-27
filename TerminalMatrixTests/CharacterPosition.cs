@@ -12,4 +12,13 @@ public class CharacterPosition
         Assert.IsFalse(new P(9, 10) > new P(9, 10));
         Assert.IsTrue(new P(10, 11) > new P(10, 10));
     }
+
+    [TestMethod]
+    public void LessThan()
+    {
+        Assert.IsTrue(new P(9, 10) < new P(10, 10));
+        Assert.IsFalse(new P(9, 10) < new P(9, 10));
+        Assert.IsFalse(new P(11, 10) < new P(10, 10));
+        Assert.IsTrue(new P(10, 9) < new P(10, 10));
+    }
 }

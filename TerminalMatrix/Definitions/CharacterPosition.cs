@@ -19,7 +19,7 @@ public class CharacterPosition
         if (a.Y > b.Y)
             return true;
 
-        return a.X > a.Y;
+        return a.X > b.X;
     }
 
     public static bool operator <(CharacterPosition a, CharacterPosition b)
@@ -30,6 +30,6 @@ public class CharacterPosition
         if (a.Y < b.Y)
             return true;
 
-        return a.X < a.Y;
+        return a.X < b.X;
     }
 }

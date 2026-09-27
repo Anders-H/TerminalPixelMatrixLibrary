@@ -3,8 +3,15 @@ using TerminalMatrix;
 namespace TerminalMatrixTests;
 
 [TestClass]
+[DoNotParallelize]
 public class CoordinateTests
 {
+    [TestInitialize]
+    public void SetResolution()
+    {
+        TerminalMatrix.Definitions.CharacterMatrixDefinition.Create(Resolution.Pixels640x200Characters80x25);
+    }
+
     [TestMethod]
     public void GreaterThan()
     {

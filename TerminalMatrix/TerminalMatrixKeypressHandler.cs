@@ -18,7 +18,7 @@ internal class TerminalMatrixKeypressHandler
             typeCharacter(e.KeyChar);
     }
 
-    internal void HandleKeyDown(KeyEventArgs e, bool inputMode, int inputStartX, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
+    internal void HandleKeyDown(KeyEventArgs e, bool inputMode, int inputStartX, int inputStartY, Coordinate cursorPosition, Action showKeyboardActivity, Action scroll)
     {
         if (e.KeyCode == Keys.Enter)
         {
@@ -31,9 +31,16 @@ internal class TerminalMatrixKeypressHandler
             case Keys.Left:
                 if (inputMode)
                 {
-                    if (cursorPosition.X > inputStartX)
+                    var limit = cursorPosition.Y == inputStartY ? inputStartX : 0;
+                    if (cursorPosition.X > limit)
                     {
                         cursorPosition.X--;
+                        showKeyboardActivity();
+                    }
+                    else if (cursorPosition.Y > inputStartY)
+                    {
+                        cursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                        cursorPosition.Y--;
                         showKeyboardActivity();
                     }
                 }
@@ -68,6 +75,12 @@ internal class TerminalMatrixKeypressHandler
                     if (cursorPosition.X < CharacterMatrixDefinition.Width - 1)
                     {
                         cursorPosition.X++;
+                        showKeyboardActivity();
+                    }
+                    else if (!_owner.GetTerminator(cursorPosition.Y) && cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                    {
+                        cursorPosition.X = 0;
+                        cursorPosition.Y++;
                         showKeyboardActivity();
                     }
                 }

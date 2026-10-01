@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>PixelmapLibraryNetFramework</id>
+    <version>1.0.0</version>
+    <title>TerminalMatrixNetFramework</title>
+    <authors>Anders Hesselbom</authors>
+    <owners>Anders Hesselbom</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>A .NET Framework version of Terminal Pixel Matrix Library</description>
+  </metadata>
+  <files>
+    <file src="TerminalMatrixNetFramework\bin\Release\*.*" target="lib\net48" />
+  </files>
+</package>

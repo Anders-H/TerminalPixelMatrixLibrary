@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.8.34309.116
+# Visual Studio Version 18
+VisualStudioVersion = 18.11.12224.323 insiders
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TerminalMatrix", "TerminalMatrix\TerminalMatrix.csproj", "{2EECE1F1-BD81-4844-9A7D-FA834B5A50A4}"
 EndProject
@@ -17,6 +17,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AdventureGameExample", "AdventureGameExample\AdventureGameExample.csproj", "{88B3E7D6-150C-4427-9F24-19F02F46A2E3}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlideshowExample", "SlideshowExample\SlideshowExample.csproj", "{11A32DEF-7157-4DE6-9C1D-7C4F07705DBC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerminalMatrixNetFramework", "TerminalMatrixNetFramework\TerminalMatrixNetFramework.csproj", "{297F487D-0C66-4B73-BC76-D943977FB449}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +46,10 @@ Global
 		{11A32DEF-7157-4DE6-9C1D-7C4F07705DBC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11A32DEF-7157-4DE6-9C1D-7C4F07705DBC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11A32DEF-7157-4DE6-9C1D-7C4F07705DBC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{297F487D-0C66-4B73-BC76-D943977FB449}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{297F487D-0C66-4B73-BC76-D943977FB449}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{297F487D-0C66-4B73-BC76-D943977FB449}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{297F487D-0C66-4B73-BC76-D943977FB449}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -35,6 +35,7 @@ public partial class TerminalMatrixControl : UserControl
     private bool _cursorVisibleBlink;
     private readonly System.Windows.Forms.Timer _timer = new();
     private string _lastInput;
+    private int _inputBreakVersion;
     private readonly TerminalCodePage _codePage;
     private readonly Palette _palette;
     private TerminalState TerminalState { get; }
@@ -515,6 +516,13 @@ public partial class TerminalMatrixControl : UserControl
 
         if (e is { KeyCode: Keys.C, Control: true })
         {
+            e.SuppressKeyPress = true;
+            if (TerminalState.InputMode)
+            {
+                _inputBreakVersion++;
+                TerminalState.InputMode = false;
+                _lastInput = "";
+            }
             UserBreak?.Invoke(this, e);
             return;
         }
@@ -827,7 +835,11 @@ public partial class TerminalMatrixControl : UserControl
     public void List()
     {
         foreach (var programLine in ProgramLines)
+        {
             WriteLine(programLine.Value.RawString);
+            Refresh();
+            Thread.Sleep(10);
+        }
     }
 
     public bool GetTerminator(int y)
@@ -901,6 +913,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public string InputString(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
+        var breakVersion = _inputBreakVersion;
         BeginInput(prompt, defaultValue, promptColor, valueColor);
 
         do
@@ -911,7 +924,13 @@ public partial class TerminalMatrixControl : UserControl
             Thread.Yield();
             Thread.Sleep(2);
             Application.DoEvents();
-        } while (TerminalState.InputMode && !QuitFlag);
+        } while (TerminalState.InputMode && !QuitFlag && breakVersion == _inputBreakVersion);
+
+        if (QuitFlag || breakVersion != _inputBreakVersion)
+        {
+            TerminalState.InputMode = false;
+            return "";
+        }
 
         return _lastInput;
     }
@@ -929,7 +948,10 @@ public partial class TerminalMatrixControl : UserControl
     {
         do
         {
+            var breakVersion = _inputBreakVersion;
             var inputResult = InputString(prompt, defaultValue, promptColor, valueColor);
+            if (QuitFlag || breakVersion != _inputBreakVersion)
+                return 0;
 
             if (double.TryParse(inputResult, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
                 return result;
@@ -951,7 +973,10 @@ public partial class TerminalMatrixControl : UserControl
     {
         do
         {
+            var breakVersion = _inputBreakVersion;
             var inputResult = InputString(prompt, defaultValue, promptColor, valueColor);
+            if (QuitFlag || breakVersion != _inputBreakVersion)
+                return 0;
 
             if (int.TryParse(inputResult, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
                 return result;

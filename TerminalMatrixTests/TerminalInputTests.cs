@@ -206,6 +206,84 @@ public class TerminalInputTests
     }
 
     [TestMethod]
+    public void BreakCancelsEventBasedInputWithoutCompletingIt()
+    {
+        WithTerminal(terminal =>
+        {
+            var breaks = 0;
+            var completed = 0;
+            var typed = new List<string>();
+            terminal.UserBreak += (_, _) => breaks++;
+            terminal.InputCompleted += (_, _) => completed++;
+            terminal.TypedLine += (_, e) => typed.Add(e.InputValue);
+            terminal.BeginInput("? ");
+            terminal.Type("PARTIAL");
+            terminal.Press(Keys.Control | Keys.C);
+            terminal.BeginInput("Next? ");
+            terminal.Type("OK");
+            terminal.Press(Keys.Enter);
+            terminal.Type("COMMAND");
+            terminal.Press(Keys.Enter);
+            Assert.AreEqual(1, breaks);
+            Assert.AreEqual(1, completed);
+            CollectionAssert.AreEqual(new[] { "COMMAND" }, typed);
+        });
+    }
+
+    [DataTestMethod]
+    [DataRow("string")]
+    [DataRow("integer")]
+    [DataRow("double")]
+    public void BreakReturnsFromSynchronousInputWithoutEnter(string kind)
+    {
+        WithTerminal(terminal =>
+        {
+            var breaks = 0;
+            var completed = 0;
+            var returned = false;
+            terminal.UserBreak += (_, _) =>
+            {
+                Assert.IsFalse(returned);
+                breaks++;
+            };
+            terminal.InputCompleted += (_, _) => completed++;
+            // Queue the key through the UI message pump used by InputString.
+            _ = terminal.Handle;
+            terminal.BeginInvoke(new Action(() =>
+            {
+                terminal.Type("123");
+                terminal.Press(Keys.Control | Keys.C);
+            }));
+            var timedOut = false;
+            using var watchdog = new System.Windows.Forms.Timer { Interval = 2000 };
+            watchdog.Tick += (_, _) => { timedOut = true; terminal.Quit(); };
+            watchdog.Start();
+            switch (kind)
+            {
+                case "string": Assert.AreEqual("", terminal.InputString("? ")); break;
+                case "integer": Assert.AreEqual(0, terminal.InputInteger("? ")); break;
+                case "double": Assert.AreEqual(0d, terminal.InputDouble("? ")); break;
+            }
+            returned = true;
+            watchdog.Stop();
+            Assert.IsFalse(timedOut, "Input waited after Ctrl+C.");
+            Assert.IsFalse(terminal.QuitFlag);
+            Assert.AreEqual(1, breaks);
+            Assert.AreEqual(0, completed);
+
+            terminal.BeginInvoke(new Action(() =>
+            {
+                terminal.Type("42");
+                terminal.Press(Keys.Enter);
+            }));
+            watchdog.Start();
+            Assert.AreEqual("42", terminal.InputString("Next? "));
+            watchdog.Stop();
+            Assert.IsFalse(timedOut);
+        });
+    }
+
+    [TestMethod]
     public void ProgramLinesAndShiftEnterKeepTheirBehavior()
     {
         WithTerminal(terminal =>

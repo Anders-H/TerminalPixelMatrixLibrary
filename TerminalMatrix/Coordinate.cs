@@ -1,9 +1,14 @@
-﻿using TerminalMatrix.Definitions;
+using TerminalMatrix.Definitions;
 
 namespace TerminalMatrix;
 
 public class Coordinate
 {
+    private readonly int? _width;
+    private readonly int? _height;
+    private int Width => _width ?? CharacterMatrixDefinition.Width;
+    private int Height => _height ?? CharacterMatrixDefinition.Height;
+
     public int X { get; set; }
     public int Y { get; set; }
 
@@ -16,8 +21,14 @@ public class Coordinate
         Y = y;
     }
 
+    internal Coordinate(int x, int y, int width, int height) : this(x, y)
+    {
+        _width = width;
+        _height = height;
+    }
+
     public Coordinate Copy() =>
-        new(X, Y);
+        _width.HasValue ? new Coordinate(X, Y, Width, Height) : new Coordinate(X, Y);
 
     public bool IsSame(int x, int y) =>
         X == x && Y == y;
@@ -50,21 +61,21 @@ public class Coordinate
 
     public bool MoveNext()
     {
-        if (X < CharacterMatrixDefinition.Width - 1)
+        if (X < Width - 1)
         {
             X++;
             return true;
         }
 
-        if (Y < CharacterMatrixDefinition.Height - 1)
+        if (Y < Height - 1)
         {
             Y++;
             X = 0;
             return true;
         }
 
-        X = CharacterMatrixDefinition.Width - 1;
-        Y = CharacterMatrixDefinition.Height - 1;
+        X = Width - 1;
+        Y = Height - 1;
         return false;
     }
 
@@ -79,7 +90,7 @@ public class Coordinate
         if (Y > 0)
         {
             Y--;
-            X = CharacterMatrixDefinition.Width - 1;
+            X = Width - 1;
             return true;
         }
 
@@ -151,23 +162,23 @@ public class Coordinate
     }
 
     public bool CanMoveDown() =>
-        Y < CharacterMatrixDefinition.Height - 1;
+        Y < Height - 1;
 
 
     public bool AtEnd()
     {
-        if (Y < CharacterMatrixDefinition.Height - 1)
+        if (Y < Height - 1)
             return false;
 
-        return X >= CharacterMatrixDefinition.Width - 1;
+        return X >= Width - 1;
     }
 
     public bool AtEnd(CoordinateList earlyStop)
     {
-        if (Y < CharacterMatrixDefinition.Height - 1)
+        if (Y < Height - 1)
             return false;
 
-        return X >= CharacterMatrixDefinition.Width - 1;
+        return X >= Width - 1;
     }
 
     public override string ToString() =>

@@ -39,6 +39,12 @@ public partial class TerminalMatrixControl : UserControl
     private bool _resolutionIncorrect;
     private bool _use32BitForeground;
 
+    public int CharacterWidth { get; private set; } = 40;
+    public int CharacterHeight { get; private set; } = 25;
+    public int TextRenderLimit { get; private set; }
+    private int PixelWidth => CharacterWidth * 8;
+    private int PixelHeight => CharacterHeight * 8;
+
     public RenderingMode RenderingMode { get; set; }
     public Resolution Resolution { get; private set; }
     public bool QuitFlag { get; private set; }
@@ -143,16 +149,16 @@ public partial class TerminalMatrixControl : UserControl
     /// <summary>
     /// First visible text line.
     /// </summary>
-    /// <param name="limit">0 (default, all lines are visible) to 23 (only the bottom two lines are visible)</param>
+    /// <param name="limit">0 (all lines are visible) to CharacterHeight - 2 (only the bottom two lines are visible)</param>
     public void SetTextRenderLimit(int limit)
     {
-        if (limit < 0 || limit > 23)
+        if (limit < 0 || limit > CharacterHeight - 2)
             throw new ArgumentOutOfRangeException(nameof(limit));
 
         if (CursorPosition.Y < limit)
             CursorPosition.Y = limit;
 
-        CharacterMatrixDefinition.TextRenderLimit = limit;
+        TextRenderLimit = limit;
         UpdateBitmap();
         Invalidate();
     }
@@ -165,19 +171,16 @@ public partial class TerminalMatrixControl : UserControl
     public void SetResolution(Resolution resolution)
     {
         Resolution = resolution;
-        CursorPosition = new Coordinate(0, 0);
-        _characterColorMap = CharacterMatrixDefinition.Create(Resolution);
-        _characterMap = CharacterMatrixDefinition.Create(Resolution);
+        var characterSize = ResolutionHelper.GetCharacterMapSize(resolution);
+        CharacterWidth = characterSize.Width;
+        CharacterHeight = characterSize.Height;
+        TextRenderLimit = Math.Min(TextRenderLimit, CharacterHeight - 2);
+        CursorPosition = new Coordinate(0, 0, CharacterWidth, CharacterHeight);
+        _characterColorMap = new byte[CharacterWidth, CharacterHeight];
+        _characterMap = new byte[CharacterWidth, CharacterHeight];
         _terminations = CharacterMatrixDefinition.CreateTerminations(Resolution);
 
-        try
-        {
-            _fastBitmap?.Dispose();
-        }
-        catch
-        {
-            // ignored
-        }
+        _fastBitmap?.Dispose();
 
         var size = ResolutionHelper.GetPixelSize(resolution, BorderWidth, BorderHeight);
         _fastBitmap = Pixelmap.CreateCompatibleBitmap(size.Width, size.Height);
@@ -185,13 +188,15 @@ public partial class TerminalMatrixControl : UserControl
         _resolutionIncorrect = false;
         Background24Bit = new int[size.Width, size.Height];
 
-        for (var y = 0; y < size.Height; y++)
-            for (var x = 0; x < size.Width; x++)
-                Background24Bit[x, y] = 0;
-
         _pixelMap.LockBits();
-        Clear();
-        _pixelMap.UnlockBits();
+        try
+        {
+            Clear();
+        }
+        finally
+        {
+            _pixelMap.UnlockBits();
+        }
     }
 
     private void Blink(object? sender, EventArgs e)
@@ -209,18 +214,18 @@ public partial class TerminalMatrixControl : UserControl
 
     public void ClearColorMap()
     {
-        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
-            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+        for (var y = 0; y < CharacterHeight; y++)
+            for (var x = 0; x < CharacterWidth; x++)
                 _characterColorMap[x, y] = CurrentCursorColor;
     }
 
     public void ClearCharacterMap()
     {
-        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
-            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+        for (var y = 0; y < CharacterHeight; y++)
+            for (var x = 0; x < CharacterWidth; x++)
                 _characterMap[x, y] = CharacterMatrixDefinition.CharacterEmpty;
 
-        for (var y = 0; y < CharacterMatrixDefinition.Height; y++)
+        for (var y = 0; y < CharacterHeight; y++)
             _terminations[y] = true;
     }
 
@@ -240,7 +245,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void HorizontalLine(int y, ColorName color)
     {
-        for (var x = 0; x < PixelMatrixDefinition.Width; x++)
+        for (var x = 0; x < PixelWidth; x++)
             _pixelMap.RangeSafeSetPixel(x, y, _palette.GetColor(color));
     }
 
@@ -263,20 +268,20 @@ public partial class TerminalMatrixControl : UserControl
     {
         var targetX = x + BorderWidth;
         var targetY = y + BorderHeight;
-        var limitX = PixelMatrixDefinition.Width + BorderWidth;
-        var limitY = PixelMatrixDefinition.Height + BorderHeight;
+        var limitX = PixelWidth + BorderWidth;
+        var limitY = PixelHeight + BorderHeight;
 
         for (var sourceY = 0; sourceY < colors.GetLength(1); sourceY++)
         {
             for (var sourceX = 0; sourceX < colors.GetLength(0); sourceX++)
             {
-                if (targetX >= 0 && targetX < limitX && targetY >= 0 && targetY < limitY)
+                if (targetX >= BorderWidth && targetX < limitX && targetY >= BorderHeight && targetY < limitY)
                     _pixelMap.SetPixel(targetX, targetY, _palette.GetColor(colors[sourceX, sourceY]));
 
                 targetX++;
             }
 
-            targetX = x;
+            targetX = x + BorderWidth;
             targetY++;
         }
     }
@@ -293,7 +298,7 @@ public partial class TerminalMatrixControl : UserControl
     {
         var c = (byte)color;
 
-        for (var y = 0; y < PixelMatrixDefinition.Height; y++)
+        for (var y = 0; y < PixelHeight; y++)
             _pixelMap.SetPixel(x, y, _palette.GetColor(c));
     }
 
@@ -345,37 +350,44 @@ public partial class TerminalMatrixControl : UserControl
         }
 
         _pixelMap.LockBits();
-        underText?.Invoke(_pixelMap);
-
-        if (UseBackground24Bit)
+        try
         {
-            for (var y = 0; y < _pixelMap.Height; y++)
-                for (var x = 0; x < _pixelMap.Width; x++)
-                    _pixelMap.SetPixel(x, y, Color.FromArgb(Background24Bit[x, y]));
-        }
+            underText?.Invoke(_pixelMap);
 
-        for (var y = CharacterMatrixDefinition.TextRenderLimit; y < CharacterMatrixDefinition.Height; y++)
-        {
-            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+            if (UseBackground24Bit)
             {
-                var pixelStart = new Coordinate(x * 8 + BorderWidth, y * 8 + BorderHeight);
+                for (var y = 0; y < _pixelMap.Height; y++)
+                    for (var x = 0; x < _pixelMap.Width; x++)
+                        _pixelMap.SetPixel(x, y, Color.FromArgb(Background24Bit[x, y]));
+            }
 
-                if (CursorPosition.IsSame(x, y))
+            for (var y = TextRenderLimit; y < CharacterHeight; y++)
+            {
+                for (var x = 0; x < CharacterWidth; x++)
                 {
-                    if (_cursorVisibleBlink)
-                        _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(CurrentCursorColor), Color.Black);
-                    else
-                        _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, Color.Black, _palette.GetColor(CurrentCursorColor));
-                }
-                else if (_characterMap[x, y] > 0)
-                {
-                    _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelStart.X, pixelStart.Y, _palette.GetColor(_characterColorMap[x, y]), Color.Black);
+                    var pixelX = x * 8 + BorderWidth;
+                    var pixelY = y * 8 + BorderHeight;
+
+                    if (CursorPosition.IsSame(x, y))
+                    {
+                        if (_cursorVisibleBlink)
+                            _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelX, pixelY, _palette.GetColor(CurrentCursorColor), Color.Black);
+                        else
+                            _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelX, pixelY, Color.Black, _palette.GetColor(CurrentCursorColor));
+                    }
+                    else if (_characterMap[x, y] > 0)
+                    {
+                        _fontMonochromeSprite.DrawOpaque(_pixelMap, _characterMap[x, y], pixelX, pixelY, _palette.GetColor(_characterColorMap[x, y]), Color.Black);
+                    }
                 }
             }
-        }
 
-        overText?.Invoke(_pixelMap);
-        _pixelMap.UnlockBits();
+            overText?.Invoke(_pixelMap);
+        }
+        finally
+        {
+            _pixelMap.UnlockBits();
+        }
         Invalidate();
     }
 
@@ -432,7 +444,7 @@ public partial class TerminalMatrixControl : UserControl
         _characterMap[CursorPosition.X, CursorPosition.Y] = (byte)c;
         _characterColorMap[CursorPosition.X, CursorPosition.Y] = CurrentCursorColor;
 
-        if (CursorPosition.X < CharacterMatrixDefinition.Width - 1)
+        if (CursorPosition.X < CharacterWidth - 1)
         {
             CursorPosition.X++;
         }
@@ -460,7 +472,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void WriteText(string text)
     {
-        var rows = WordWrapper.WordWrap(text);
+        var rows = WordWrapper.WordWrap(text, CharacterWidth);
 
         foreach (var row in rows)
             WriteLine(row);
@@ -561,7 +573,7 @@ public partial class TerminalMatrixControl : UserControl
                 if (TerminalState.InputMode)
                     return;
 
-                CursorPosition.Y = CharacterMatrixDefinition.TextRenderLimit;
+                CursorPosition.Y = TextRenderLimit;
                 ShowEffect();
                 break;
             case Keys.PageDown:
@@ -569,7 +581,7 @@ public partial class TerminalMatrixControl : UserControl
                 if (TerminalState.InputMode)
                     return;
 
-                CursorPosition.Y = CharacterMatrixDefinition.Height - 1;
+                CursorPosition.Y = CharacterHeight - 1;
                 ShowEffect();
                 break;
             case Keys.Home:
@@ -578,7 +590,7 @@ public partial class TerminalMatrixControl : UserControl
                 ShowEffect();
                 break;
             case Keys.End:
-                CursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                CursorPosition.X = CharacterWidth - 1;
                 ShowEffect();
                 break;
             case Keys.Insert:
@@ -623,7 +635,7 @@ public partial class TerminalMatrixControl : UserControl
             firstRow = Math.Max(firstRow, TerminalState.InputStartY);
 
         var lastRow = CursorPosition.Y;
-        while (lastRow < CharacterMatrixDefinition.Height - 1 && !_terminations[lastRow])
+        while (lastRow < CharacterHeight - 1 && !_terminations[lastRow])
             lastRow++;
 
         var inputValue = new StringBuilder();
@@ -632,7 +644,7 @@ public partial class TerminalMatrixControl : UserControl
             var start = TerminalState.InputMode && y == TerminalState.InputStartY
                 ? TerminalState.InputStartX
                 : 0;
-            for (var x = start; x < CharacterMatrixDefinition.Width; x++)
+            for (var x = start; x < CharacterWidth; x++)
             {
                 var c = _characterMap[x, y];
                 inputValue.Append(c == 0 ? ' ' : _codePage.Chr[c]);
@@ -668,13 +680,13 @@ public partial class TerminalMatrixControl : UserControl
 
     private void DoInsert(byte[,] map, bool[]? terminations, byte empty) // Accepts the terminations array just in case it is needed.
     {
-        if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
+        if (CursorPosition.X >= CharacterWidth - 1)
         {
             map[CursorPosition.X, CursorPosition.Y] = empty;
             return;
         }
 
-        for (var x = CharacterMatrixDefinition.Width - 2; x >= CursorPosition.X; x--)
+        for (var x = CharacterWidth - 2; x >= CursorPosition.X; x--)
             map[x + 1, CursorPosition.Y] = map[x, CursorPosition.Y];
 
         map[CursorPosition.X, CursorPosition.Y] = empty;
@@ -682,16 +694,16 @@ public partial class TerminalMatrixControl : UserControl
 
     private void DoDelete(byte[,] map, bool[]? terminations, byte empty) // Accepts the terminations array just in case it is needed.
     {
-        if (CursorPosition.X >= CharacterMatrixDefinition.Width - 1)
+        if (CursorPosition.X >= CharacterWidth - 1)
         {
             map[CursorPosition.X, CursorPosition.Y] = empty;
             return;
         }
 
-        for (var x = CursorPosition.X; x < CharacterMatrixDefinition.Width - 1; x++)
+        for (var x = CursorPosition.X; x < CharacterWidth - 1; x++)
             map[x, CursorPosition.Y] = map[x + 1, CursorPosition.Y];
 
-        map[CharacterMatrixDefinition.Width - 1, CursorPosition.Y] = empty;
+        map[CharacterWidth - 1, CursorPosition.Y] = empty;
     }
 
     public SetProgramLinesResult SetProgramLines(string? code)
@@ -707,7 +719,7 @@ public partial class TerminalMatrixControl : UserControl
         foreach (var row in rows)
         {
             var r = row.Replace("\r", "").Replace("\n", "").Trim();
-            
+
             if (!string.IsNullOrWhiteSpace(r))
                 trimmedRows.Add(r);
         }
@@ -776,13 +788,13 @@ public partial class TerminalMatrixControl : UserControl
 
     private void ScrollCharacterMap(byte[,] characterMap, byte blank)
     {
-        for (var y = 1; y < CharacterMatrixDefinition.Height; y++)
-            for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+        for (var y = 1; y < CharacterHeight; y++)
+            for (var x = 0; x < CharacterWidth; x++)
                 characterMap[x, y - 1] = characterMap[x, y];
 
-        var last = CharacterMatrixDefinition.Height - 1;
+        var last = CharacterHeight - 1;
 
-        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+        for (var x = 0; x < CharacterWidth; x++)
             characterMap[x, last] = blank;
     }
 
@@ -797,8 +809,8 @@ public partial class TerminalMatrixControl : UserControl
 
     public void BeginInput(string prompt, string defaultValue, byte promptColor, byte valueColor)
     {
-        if (prompt.Length > CharacterMatrixDefinition.Width - 2)
-            prompt = prompt.Substring(0, CharacterMatrixDefinition.Width - 2);
+        if (prompt.Length > CharacterWidth - 2)
+            prompt = prompt.Substring(0, CharacterWidth - 2);
 
         ClearLine(_characterMap, CursorPosition.Y, CharacterMatrixDefinition.CharacterEmpty);
         ClearLine(_characterColorMap, CursorPosition.Y, CurrentCursorColor);
@@ -820,7 +832,7 @@ public partial class TerminalMatrixControl : UserControl
 
     private void ClearLine(byte[,] map, int y, byte clear)
     {
-        for (var x = 0; x < CharacterMatrixDefinition.Width; x++)
+        for (var x = 0; x < CharacterWidth; x++)
             map[x, y] = clear;
     }
 
@@ -832,7 +844,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public bool GetTerminator(int y)
     {
-        if (y < 0 || y >= CharacterMatrixDefinition.Height)
+        if (y < 0 || y >= CharacterHeight)
             return false;
 
         return _terminations[y];
@@ -840,7 +852,7 @@ public partial class TerminalMatrixControl : UserControl
 
     public void SetTerminator(int y, bool terminator)
     {
-        if (y < 0 || y >= CharacterMatrixDefinition.Height)
+        if (y < 0 || y >= CharacterHeight)
             return;
 
         _terminations[y] = terminator;
@@ -855,7 +867,7 @@ public partial class TerminalMatrixControl : UserControl
 
         for (var x = 0; x < text.Length; x++)
         {
-            if (x + xStart >= CharacterMatrixDefinition.Width)
+            if (x + xStart >= CharacterWidth)
                 break;
             _characterMap[x + xStart, y] = (byte)text[x];
             _characterColorMap[x + xStart, y] = CurrentCursorColor;
@@ -871,7 +883,7 @@ public partial class TerminalMatrixControl : UserControl
 
         for (var x = 0; x < text.Length; x++)
         {
-            if (x >= CharacterMatrixDefinition.Width)
+            if (x >= CharacterWidth)
                 break;
 
             _characterMap[x, y] = (byte)text[x];

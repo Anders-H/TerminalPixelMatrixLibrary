@@ -8,14 +8,14 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<Title>TerminalMatrix</Title>
 		<Company>Anders Hesselbom</Company>
-		<Version>2.7.4</Version>
+		<Version>2.7.5</Version>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<AssemblyVersion>2.7.4</AssemblyVersion>
-		<FileVersion>2.7.4</FileVersion>
+		<AssemblyVersion>2.7.5</AssemblyVersion>
+		<FileVersion>2.7.5</FileVersion>
 		<Description>A pixel based terminal matrix.</Description>
 		<PackageIcon>terminal.png</PackageIcon>
-		<PackageReleaseNotes>Breack (Ctrl+C) bug fix in input state.</PackageReleaseNotes>
+		<PackageReleaseNotes>Some minor fixes.</PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/Anders-H/TerminalPixelMatrixLibrary</RepositoryUrl>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>

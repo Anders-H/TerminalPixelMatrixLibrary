@@ -1,5 +1,6 @@
-﻿using PixelmapLibrary.FontManagement;
-using TerminalMatrix.Definitions;
+using System;
+using System.Windows.Forms;
+using PixelmapLibrary.FontManagement;
 
 namespace TerminalMatrix;
 
@@ -39,7 +40,7 @@ internal class TerminalMatrixKeypressHandler
                     }
                     else if (cursorPosition.Y > inputStartY)
                     {
-                        cursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                        cursorPosition.X = _owner.CharacterWidth - 1;
                         cursorPosition.Y--;
                         showKeyboardActivity();
                     }
@@ -51,9 +52,9 @@ internal class TerminalMatrixKeypressHandler
                         cursorPosition.X--;
                         showKeyboardActivity();
                     }
-                    else if (cursorPosition.Y > CharacterMatrixDefinition.TextRenderLimit)
+                    else if (cursorPosition.Y > _owner.TextRenderLimit)
                     {
-                        cursorPosition.X = CharacterMatrixDefinition.Width - 1;
+                        cursorPosition.X = _owner.CharacterWidth - 1;
                         cursorPosition.Y--;
                         showKeyboardActivity();
                     }
@@ -63,7 +64,7 @@ internal class TerminalMatrixKeypressHandler
                 if (inputMode)
                     return;
 
-                if (cursorPosition.Y > CharacterMatrixDefinition.TextRenderLimit)
+                if (cursorPosition.Y > _owner.TextRenderLimit)
                 {
                     cursorPosition.Y--;
                     showKeyboardActivity();
@@ -72,12 +73,12 @@ internal class TerminalMatrixKeypressHandler
             case Keys.Right:
                 if (inputMode)
                 {
-                    if (cursorPosition.X < CharacterMatrixDefinition.Width - 1)
+                    if (cursorPosition.X < _owner.CharacterWidth - 1)
                     {
                         cursorPosition.X++;
                         showKeyboardActivity();
                     }
-                    else if (!_owner.GetTerminator(cursorPosition.Y) && cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                    else if (!_owner.GetTerminator(cursorPosition.Y) && cursorPosition.Y < _owner.CharacterHeight - 1)
                     {
                         cursorPosition.X = 0;
                         cursorPosition.Y++;
@@ -86,12 +87,12 @@ internal class TerminalMatrixKeypressHandler
                 }
                 else
                 {
-                    if (cursorPosition.X < CharacterMatrixDefinition.Width - 1)
+                    if (cursorPosition.X < _owner.CharacterWidth - 1)
                     {
                         cursorPosition.X++;
                         showKeyboardActivity();
                     }
-                    else if (cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                    else if (cursorPosition.Y < _owner.CharacterHeight - 1)
                     {
                         cursorPosition.X = 0;
                         cursorPosition.Y++;
@@ -103,7 +104,7 @@ internal class TerminalMatrixKeypressHandler
                 if (inputMode)
                     return;
 
-                if (cursorPosition.Y < CharacterMatrixDefinition.Height - 1)
+                if (cursorPosition.Y < _owner.CharacterHeight - 1)
                 {
                     cursorPosition.Y++;
                     showKeyboardActivity();

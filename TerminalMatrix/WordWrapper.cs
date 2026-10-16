@@ -1,11 +1,12 @@
-﻿using System.Text;
-using TerminalMatrix.Definitions;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace TerminalMatrix;
 
 internal static class WordWrapper
 {
-    public static List<string> WordWrap(string text)
+    public static List<string> WordWrap(string text, int width)
     {
         var result = new List<string>();
 
@@ -43,8 +44,8 @@ internal static class WordWrapper
                 {
                     var length = endOfLine - charPointer;
                     
-                    if (length > CharacterMatrixDefinition.Width)
-                        length = Break(text, charPointer, CharacterMatrixDefinition.Width);
+                    if (length > width)
+                        length = Break(text, charPointer, width);
                     
                     s.Append(text, charPointer, length);
                     result.Add(s.ToString());
